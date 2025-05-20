@@ -1,0 +1,20 @@
+Context: <requirements> 
+PlantUML result A: <Code for PlantUML A> 
+PlantUML result B: <Code for PlantUML B> 
+
+Which PlantUML result is more consistent relative to the context, result A or result B?  Please provide your answer with a score of 1-100.
+
+
+
+
+*****************
+Context: <requirements> 
+Result: <Code for PlantUML>
+
+
+Please assign a score from 1–5 for the following:
+To what extent does the result cover all relevant aspects of the context provided in the requirements?
+How accurate and logically consistent is the result in reflecting the given requirements?
+How well does the result adhere to UML standards, both syntactically and semantically?
+How understandable is the result from a stakeholder perspective?
+How closely does the result's terminology match that used in the original requirements?
