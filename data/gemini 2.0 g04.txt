@@ -1,0 +1,258 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package UserManagement {
+  class User {
+    +email: String
+    +password: String
+    +zipCode: String
+    +schedule: String
+    +favoriteCenters: List<RecyclingCenter>
+    +transactionHistory: List<Transaction>
+    +notificationsEnabled: Boolean
+    +profileCreated: Boolean
+    +signUp()
+    +login()
+    +logout()
+    +updateProfile()
+    +viewDocumentation()
+    +requestPasswordReset()
+    +receiveNotification(event: String)
+    +addToFavorites(center: RecyclingCenter)
+    +viewFavorites()
+    +viewTransactionHistory()
+    +uploadSchedule(schedule: String)
+    +linkEmail(email: String)
+    +contactAdmin(message: String)
+  }
+
+  class AnonymousUser {
+    +viewPublicInfo()
+    +enterZipCode(zipCode: String): List<RecyclingCenter>
+  }
+
+  class AuthenticatedUser extends User {
+    +createAccount()
+  }
+
+  class Publisher extends User {
+    +addRecyclingFacility(facility: RecyclingFacility)
+    +removeRecyclingFacility(facilityId: String)
+    +updateRecyclingFacility(facility: RecyclingFacility)
+    +readFeedback(): List<String>
+    +blockUser(ipAddress: String)
+    +viewDashboard(): Map<String, Object>
+    +handleUserActivity(activity: String)
+    +onboardRecyclingCenter(facility: RecyclingFacility)
+    +updateCenterInfo(facility: RecyclingFacility)
+    +viewUserStats(): Map<String, Object>
+    +replyToUser(userId: String, message: String)
+    +communicateWithFacility(facilityId: String, message: String)
+  }
+
+  class Executive extends User {
+    +viewCompanyData(): Map<String, Object>
+  }
+
+  class Employee extends User {
+    +accessRoutePlanner()
+    +receiveNotification(notification: String)
+  }
+
+  class HRDepartmentEmployee extends Employee {
+    +viewEmployeeInfo(): List<Employee>
+  }
+
+  class Accountant extends Employee {
+    +viewActivityFees(): List<Fee>
+  }
+
+  class Developer extends User {
+    +accessAPI()
+    +attendUIUXLessons()
+  }
+
+  enum NotificationType {
+    +NEW_EVENT
+    +ACCOUNT_UPDATE
+    +GENERAL
+  }
+
+  interface FeedbackHandler {
+    +submitFeedback(message: String)
+  }
+
+  interface DocumentViewer {
+    +viewDocument(documentId: String)
+  }
+
+  AuthenticatedUser --|> User
+  Publisher --|> User
+  Executive --|> User
+  Employee --|> User
+  HRDepartmentEmployee --|> Employee
+  Accountant --|> Employee
+  Developer --|> User
+  User ..> NotificationType : receives
+  User ..> FeedbackHandler
+  User ..> DocumentViewer
+}
+
+package DataPackageManagement {
+  class RecyclingCenter {
+    +facilityId: String
+    +name: String
+    +address: String
+    +latitude: Double
+    +longitude: Double
+    +hours: String
+    +acceptedMaterials: List<String>
+    +isEcoFriendly: Boolean
+    +updateInfo(info: Map<String, String>)
+    +acceptsMaterial(material: String): Boolean
+    +getDirections(): String
+  }
+
+  class Event {
+    +eventId: String
+    +name: String
+    +location: String
+    +dateTime: DateTime
+    +description: String
+  }
+
+  class Transaction {
+    +transactionId: String
+    +userId: String
+    +facilityId: String
+    +dateTime: DateTime
+    +items: List<String>
+  }
+
+  class Reward {
+    +rewardId: String
+    +name: String
+    +description: String
+    +pointsNeeded: Integer
+  }
+
+  class Fee {
+    +feeId: String
+    +name: String
+    +amount: Double
+    +description: String
+  }
+
+  enum MaterialType {
+    +PLASTIC
+    +PAPER
+    +GLASS
+    +METAL
+    +ELECTRONICS
+    +BATTERIES
+  }
+
+  RecyclingCenter "1" -- "*" MaterialType : accepts
+  User "1" -- "*" Transaction : has
+}
+
+package Registry {
+  class MapDisplay {
+    +showRecyclingBins(zipCode: String): Map<String, RecyclingCenter>
+    +showSpecialWasteSites(): Map<String, RecyclingCenter>
+    +showSafeDisposalEvents(): List<Event>
+  }
+
+  class RoutePlanner {
+    +getNearbyFacilities(zipCode: String): List<RecyclingCenter>
+    +getOptimalRoute(facilities: List<RecyclingCenter>, schedule: String): List<RecyclingCenter>
+    +recommendFacilities(schedule: String, materials: List<String>): List<RecyclingCenter>
+  }
+
+  class NotificationService {
+    +sendNotification(user: User, type: NotificationType, message: String)
+  }
+
+  class FeedbackSystem {
+    +submitFeedback(user: User, message: String)
+    +getFeedback(): List<String>
+  }
+
+  class AccountManager {
+    +createAccount(user: User): Boolean
+    +login(email: String, password: String): User
+    +logout(user: User): Boolean
+    +resetPassword(email: String): Boolean
+    +blockIPAddress(ipAddress: String): Boolean
+  }
+
+  class DataEncryptionService {
+    +encryptData(data: Object): String
+    +decryptData(encryptedData: String): Object
+  }
+
+  class UserActivityMonitor {
+    +logActivity(user: User, activity: String)
+    +getUsageStats(): Map<String, Integer>
+    +getLocationStats(): Map<String, Integer>
+    +getErrorLogs(): List<String>
+  }
+
+  class APIService {
+    +exposeRecyclingData(): String
+  }
+
+  class UIUXFramework {
+    +applyBootstrap()
+    +provideTemplates()
+    +ensureResponsiveness()
+  }
+
+  class RewardSystem {
+    +grantReward(user: User, reward: Reward)
+    +viewAvailableRewards(): List<Reward>
+  }
+
+  class DataStorage {
+    +storeUserData(user: User)
+    +getUserData(userId: String): User
+    +storeFacilityData(facility: RecyclingCenter)
+    +getFacilityData(facilityId: String): RecyclingCenter
+    +storeEventData(event: Event)
+    +getEventData(eventId: String): Event
+    +storeTransactionData(transaction: Transaction)
+    +getTransactionData(transactionId: String): Transaction
+    +storeFeedback(feedback: String, userId: String)
+    +getFeedback(): List<String>
+    +storeReward(reward: Reward)
+    +getReward(rewardId: String): Reward
+    +storeFee(fee: Fee)
+    +getFee(feeId: String): Fee
+  }
+
+  class ValidationService {
+    +isValidZipCode(zipCode: String): Boolean
+  }
+
+  MapDisplay ..> RecyclingCenter : uses
+  RoutePlanner ..> RecyclingCenter : uses
+  RoutePlanner ..> MaterialType : uses
+  NotificationService ..> User : sends to
+  FeedbackSystem ..> User : receives from
+  AccountManager ..> User : manages
+  UserActivityMonitor ..> User : tracks
+  RewardSystem ..> User : manages
+  DataStorage ..> User : stores
+  DataStorage ..> RecyclingCenter : stores
+  DataStorage ..> Event : stores
+  DataStorage ..> Transaction : stores
+  DataStorage ..> Reward : stores
+  DataStorage ..> Fee : stores
+  ValidationService ..> User : validates
+}
+
+User "0..*" -- "0..*" RecyclingCenter : can view
+User "0..*" -- "*" Event : can view
+User "1" -- "*" Reward : can earn
+RecyclingCenter "1" -- "*" Event : organizes
+RecyclingCenter "1" -- "*" Publisher : added by

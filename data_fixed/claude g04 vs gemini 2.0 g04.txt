@@ -1,0 +1,746 @@
+
+    Context: As a user, I want to click on the address, so that it takes me to a new tab with Google Maps.
+As a user, I want to be able to anonymously view public information, so that I know about recycling centers near me before creating an account.
+As a user, I want to be able to enter my zip code and get a list of nearby recycling facilities, so that I can determine which ones I should consider.
+As a user, I want to be able to get the hours of each recycling facility, so that I can arrange drop-offs on my off days or during after-work hours.
+As a user, I want to have a flexible pick up time, so that I can more conveniently use the website.
+As a user, I want to be able to select different types of recyclable waste, so I have and get a list of facilities that accept each type and their opening hours, so that I can find an optimal route and schedule.
+As a user, I want to add donation centers as favorites on my profile, so that I can view them later.
+As a user, I want to be able to give my email ID, so that I can receive notifications for new events as they are posted.
+As a user, I want to be able to view a map display of the public recycling bins around my area.
+As a user, I want to be able to view a map display of the special waste drop off sites around my area.
+As a user, I want to be able to view the safe disposal events currently being organised around my area.
+As a user, I want to choose a flexible pick up time, so that I can more conveniently use the website.
+As a user, I want to view user documentation for the website, so that I know how to use the web app.
+As a user, I want to get feedback when I enter an invalid zip code.
+As a user, I want to be able to create an acocunt, so that I can create my own profile.
+As an admin, I want to be able to add or remove recycling facilities' information, so that users get the most recent information.
+As an admin, I want to be able to read users' feedback and complaints, so that we can add more features and keep improving the service we provide to them.
+As a user, I want to be able to check transaction history and keep a record of it, so that I can go back when needed.
+As a user, I want to have a great UI and UX from the sites, so that I have a pleasant experience when navigating through them.
+As a user, I want to be able to access the site and do all the other stuffs on all of my electronic devices.
+As an admin, I want to be able to block specific users based on IP address, so that I can prevent spamming on the websites.
+As an admin, I want to view a dashboard that monitors all the sites' statuses, so that I can have a sense of what people are doing on our sites and know the service status.
+As an admin, I want to have all data encrypted, so that important information will not be stolen during a server breach or an attack.
+As an executive, I want to have full access to data related to my company, so that I can have a sense of my company's performance.
+As an employee, I want to access the route planning system during work, so that I can be guided through the neighbourhood.
+As an employee from the HR department, I want to have access to the full information of all employees working for this business.
+As a developer, I want to access an API from the website, so that I can integrate it and implement certain features in my own iOS application.
+As a user, I want to be able to receive tempting rewards, so that I have a reason to use the website.
+As a user, I want to have my personal information kept securely in the database of the website, so that I will not suffer from identity theft or telephone harassment.
+As an admin, I want to handle all users' activities, so that I can manage more efficiently.
+As a company, I want to have a website that is easy to use, so that I can upload or delete stuff step by step.
+As an employee, I want to get quick notifications, so that I can process cases the first time.
+As a company accountant, I want to view all available activity fees online, so that I can easily create a bill statement.
+As a developer, I want to use bootstrap in the process of developing, so that I can easily design my website.
+As a developer, I want to attend some UI/UX lessons, so that I can develop an awesome and beautiful features website.
+As a user, I want to view all locations of recycling centers on a map, so that I can check which routes to take to drop off waste.
+As a user, I want to upload my week's schedule, so that I can get recommendations for recycling centers that best fit my availability.
+As a user, I want to link my email account to my profile, so that I can get a temporary password in case I forget my own one.
+As a user, I want to contact the administrators, so that I can give feedback or ask for help.
+As an admin, I want to add recycling center information, so that I can keep the database up-to-date over time.
+As an admin, I want to view user error logs, so that I can fix or review any issues that are being faced by users of the system.
+As an admin, I want to onboard recycling centers on the platform, so that I can increase information accuracy.
+As a superuser, I want to update the recycling center information, so that I can provide the latest information about the recycling center.
+As a superuser, I want to view users' stats, so that I can view in real-time how many users have visited my recycling center information and their recyclable waste.
+As a superuser, I want to reply to user questions, so that I can answer any questions about my recycling center.
+As an admin, I want to be able to have a dashboard that shows usage stats and locations, so that I can identify the neighbourhoods with the largest number of drop-offs and to try getting more facilities involved.
+As an admin, I want to be able to communicate directly with facilities, so that I can keep them updated about features we have on our website.
+As a user, I want to be able to browse through the list of facolities and see which ones are environment-friendly, so that I can know for sure my waste is not going to leave a negative ecological footprint.
+As a recyclingfacility representative, I want to be able to update my information and the type of material I accept, so that I can avoid any miscommunication with users.
+As a recyclingfacility representative, I want to have access to user stats and schedules, so that I can adjust my hours and/or upgrade equipment and capacity in order to be able to accomodate larger amounts of recyclable materials.
+As a recyclingfacility, I want to be able to communicate directly with the site admin and convey any issues or concerns I have, so that they fix them.
+
+    PlantUML result A: @startuml
+skinparam classAttributeIconSize 0
+
+package UserManagement {
+  class User {
+    +userId: String
+    +email: String
+    +password: String
+    +zipCode: String
+    +weeklySchedule: Schedule
+    +favoriteRecyclingCenters: List<RecyclingCenter>
+    +createAccount(): Boolean
+    +login(): Boolean
+    +updateProfile(): Boolean
+    +viewTransactionHistory(): List<Transaction>
+    +addFavoriteCenter(centerId: String): Boolean
+    +uploadSchedule(schedule: Schedule): Boolean
+    +linkEmailAccount(email: String): Boolean
+    +contactAdmin(message: String): Boolean
+    +provideFeedback(feedback: String): Boolean
+  }
+  
+  class Admin extends User {
+    +adminLevel: String
+    +addRecyclingFacility(facility: RecyclingCenter): Boolean
+    +removeRecyclingFacility(facilityId: String): Boolean
+    +readUserFeedback(): List<Feedback>
+    +blockUser(userId: String): Boolean
+    +viewDashboard(): Dashboard
+    +viewErrorLogs(): List<ErrorLog>
+    +communicateWithFacilities(message: String): Boolean
+    +onboardRecyclingCenter(center: RecyclingCenter): Boolean
+  }
+  
+  class SuperUser extends User {
+    +recyclingCenterId: String
+    +updateCenterInfo(centerId: String, info: CenterInfo): Boolean
+    +viewUserStats(): Statistics
+    +replyToUserQuestions(userId: String, reply: String): Boolean
+  }
+  
+  class RecyclingFacilityRep extends User {
+    +facilityId: String
+    +updateFacilityInfo(info: FacilityInfo): Boolean
+    +updateAcceptedMaterials(materials: List<MaterialType>): Boolean
+    +viewUserStatistics(): Statistics
+    +communicateWithAdmin(message: String): Boolean
+  }
+  
+  class Employee extends User {
+    +employeeId: String
+    +position: String
+    +accessRoutePlanningSystem(): RoutePlan
+    +getNotifications(): List<Notification>
+  }
+  
+  class HREmployee extends Employee {
+    +accessEmployeeInfo(): List<EmployeeInfo>
+  }
+  
+  class CompanyAccountant extends Employee {
+    +viewActivityFees(): List<Fee>
+    +createBillStatement(): BillStatement
+  }
+  
+  class Executive extends User {
+    +companyId: String
+    +accessCompanyData(): CompanyData
+  }
+  
+  class Developer extends User {
+    +accessAPI(): API
+    +useBootstrap(): Boolean
+    +attendUIUXLessons(): Boolean
+  }
+  
+  class Schedule {
+    +weekDays: List<DaySchedule>
+    +addDay(day: DaySchedule): Boolean
+    +removeDay(dayId: String): Boolean
+    +updateDay(dayId: String, schedule: DaySchedule): Boolean
+  }
+  
+  class DaySchedule {
+    +dayId: String
+    +dayName: String
+    +startTime: Time
+    +endTime: Time
+  }
+  
+  enum UserType {
+    +ANONYMOUS
+    +REGISTERED
+    +ADMIN
+    +SUPERUSER
+    +FACILITY_REP
+    +EMPLOYEE
+    +EXECUTIVE
+    +DEVELOPER
+  }
+  
+  User "1" o-- "1" Schedule : has
+  User "1" o-- "*" RecyclingCenter : favorites
+}
+
+package RecyclingManagement {
+  class RecyclingCenter {
+    +centerId: String
+    +name: String
+    +address: String
+    +zipCode: String
+    +contactInfo: String
+    +operatingHours: List<OperatingHours>
+    +acceptedMaterials: List<MaterialType>
+    +isEnvironmentFriendly: Boolean
+    +latitude: Double
+    +longitude: Double
+    +getDirections(): URL
+    +getOperatingHours(): List<OperatingHours>
+    +getAcceptedMaterials(): List<MaterialType>
+    +isOpen(dateTime: DateTime): Boolean
+  }
+  
+  class OperatingHours {
+    +dayOfWeek: String
+    +openTime: Time
+    +closeTime: Time
+    +isHoliday: Boolean
+  }
+  
+  class MaterialType {
+    +typeId: String
+    +name: String
+    +description: String
+    +recyclingInstructions: String
+  }
+  
+  class RecyclingBin {
+    +binId: String
+    +location: Location
+    +type: String
+    +capacity: Double
+    +currentFillLevel: Double
+    +acceptedMaterials: List<MaterialType>
+  }
+  
+  class SpecialWasteDropOffSite {
+    +siteId: String
+    +name: String
+    +location: Location
+    +acceptedSpecialWaste: List<MaterialType>
+    +operatingHours: List<OperatingHours>
+  }
+  
+  class SafeDisposalEvent {
+    +eventId: String
+    +name: String
+    +description: String
+    +location: Location
+    +startDateTime: DateTime
+    +endDateTime: DateTime
+    +acceptedMaterials: List<MaterialType>
+  }
+  
+  class Location {
+    +latitude: Double
+    +longitude: Double
+    +address: String
+    +zipCode: String
+    +getMapURL(): URL
+  }
+  
+  enum CenterType {
+    +RECYCLING_CENTER
+    +DONATION_CENTER
+    +DISPOSAL_SITE
+    +SPECIAL_WASTE_SITE
+  }
+  
+  RecyclingCenter "1" o-- "*" OperatingHours : has
+  RecyclingCenter "1" o-- "*" MaterialType : accepts
+  RecyclingCenter "1" o-- "1" Location : located at
+  RecyclingBin "1" o-- "1" Location : located at
+  RecyclingBin "1" o-- "*" MaterialType : accepts
+  SpecialWasteDropOffSite "1" o-- "1" Location : located at
+  SpecialWasteDropOffSite "1" o-- "*" MaterialType : accepts
+  SpecialWasteDropOffSite "1" o-- "*" OperatingHours : has
+  SafeDisposalEvent "1" o-- "1" Location : held at
+  SafeDisposalEvent "1" o-- "*" MaterialType : accepts
+}
+
+package TransactionManagement {
+  class Transaction {
+    +transactionId: String
+    +userId: String
+    +centerId: String
+    +materialTypes: List<MaterialType>
+    +quantity: Double
+    +timestamp: DateTime
+    +status: TransactionStatus
+    +getDetails(): TransactionDetails
+  }
+  
+  class PickUpRequest {
+    +requestId: String
+    +userId: String
+    +address: String
+    +preferredPickUpTime: DateTime
+    +flexibleTimeRange: TimeRange
+    +materialTypes: List<MaterialType>
+    +status: RequestStatus
+    +schedulePickUp(): Boolean
+    +updatePickUpTime(newTime: DateTime): Boolean
+    +cancelRequest(): Boolean
+  }
+  
+  class TimeRange {
+    +startTime: DateTime
+    +endTime: DateTime
+    +isWithinRange(time: DateTime): Boolean
+  }
+  
+  enum TransactionStatus {
+    +COMPLETED
+    +PENDING
+    +CANCELLED
+    +FAILED
+  }
+  
+  enum RequestStatus {
+    +SCHEDULED
+    +PENDING
+    +COMPLETED
+    +CANCELLED
+  }
+  
+  Transaction "1" -- "1" User : performed by
+  Transaction "1" -- "1" RecyclingCenter : at
+  Transaction "1" -- "*" MaterialType : includes
+  PickUpRequest "1" -- "1" User : requested by
+  PickUpRequest "1" -- "*" MaterialType : includes
+  PickUpRequest "1" o-- "1" TimeRange : has
+}
+
+package SystemManagement {
+  class Dashboard {
+    +stats: Statistics
+    +centerStatuses: List<CenterStatus>
+    +userActivities: List<UserActivity>
+    +viewStatistics(): Statistics
+    +monitorCenters(): List<CenterStatus>
+    +trackUserActivity(): List<UserActivity>
+  }
+  
+  class Statistics {
+    +userVisits: Integer
+    +dropOffs: Integer
+    +pickUps: Integer
+    +popularCenters: List<RecyclingCenter>
+    +neighborhoodActivity: Map<String, Integer>
+    +generateReport(): Report
+  }
+  
+  class UserActivity {
+    +activityId: String
+    +userId: String
+    +actionType: String
+    +timestamp: DateTime
+    +ipAddress: String
+    +deviceInfo: String
+  }
+  
+  class ErrorLog {
+    +logId: String
+    +userId: String
+    +errorType: String
+    +errorMessage: String
+    +timestamp: DateTime
+    +stackTrace: String
+  }
+  
+  class Notification {
+    +notificationId: String
+    +userId: String
+    +message: String
+    +timestamp: DateTime
+    +isRead: Boolean
+    +send(): Boolean
+    +markAsRead(): Boolean
+  }
+  
+  class Feedback {
+    +feedbackId: String
+    +userId: String
+    +message: String
+    +rating: Integer
+    +timestamp: DateTime
+    +respond(response: String): Boolean
+  }
+  
+  class API {
+    +apiKey: String
+    +endpoints: List<String>
+    +documentation: String
+    +authenticate(credentials: Credentials): Boolean
+    +makeRequest(endpoint: String, params: Map): Response
+  }
+  
+  class SecurityManager {
+    +encryptData(data: Data): EncryptedData
+    +validateZipCode(zipCode: String): Boolean
+    +blockIPAddress(ipAddress: String): Boolean
+    +secureUserData(): Boolean
+  }
+  
+  class RoutePlanningSystem {
+    +employeeId: String
+    +currentLocation: Location
+    +destination: List<Location>
+    +optimizedRoute: Route
+    +planRoute(): Route
+    +updateLocation(location: Location): Boolean
+  }
+  
+  class Route {
+    +routeId: String
+    +waypoints: List<Location>
+    +estimatedTime: Time
+    +distance: Double
+    +getDirections(): List<Direction>
+  }
+  
+  class UserDocumentation {
+    +sections: List<DocumentationSection>
+    +version: String
+    +lastUpdated: DateTime
+    +viewSection(sectionId: String): DocumentationSection
+    +searchHelp(query: String): List<SearchResult>
+  }
+  
+  Dashboard "1" o-- "1" Statistics : includes
+  Dashboard "1" o-- "*" UserActivity : monitors
+  Dashboard "1" -- "*" RecyclingCenter : tracks
+  RoutePlanningSystem "1" o-- "1" Route : generates
+  RoutePlanningSystem "1" o-- "*" Location : includes
+}
+
+package UIUXManagement {
+  class UserInterface {
+    +theme: String
+    +layout: String
+    +responsiveness: Boolean
+    +accessibilityFeatures: List<String>
+    +renderOnDevice(deviceType: String): UI
+    +provideFeedback(action: String): FeedbackUI
+  }
+  
+  class MapDisplay {
+    +centerLocation: Location
+    +zoomLevel: Integer
+    +visibleCenters: List<RecyclingCenter>
+    +visibleBins: List<RecyclingBin>
+    +visibleSpecialSites: List<SpecialWasteDropOffSite>
+    +showCenters(): List<RecyclingCenter>
+    +showPublicBins(): List<RecyclingBin>
+    +showSpecialWasteSites(): List<SpecialWasteDropOffSite>
+    +showEvents(): List<SafeDisposalEvent>
+    +getDirectionsTo(locationId: String): Directions
+  }
+  
+  class RewardSystem {
+    +userId: String
+    +pointsEarned: Integer
+    +rewardTiers: List<RewardTier>
+    +availableRewards: List<Reward>
+    +earnPoints(action: String, amount: Integer): Boolean
+    +redeemReward(rewardId: String): Boolean
+    +viewRewards(): List<Reward>
+  }
+  
+  class Reward {
+    +rewardId: String
+    +name: String
+    +description: String
+    +pointsRequired: Integer
+    +expiryDate: DateTime
+  }
+  
+  class RewardTier {
+    +tierId: String
+    +name: String
+    +minimumPoints: Integer
+    +benefits: List<String>
+  }
+  
+  UserInterface "1" o-- "1" MapDisplay : includes
+  UserInterface "1" o-- "1" RewardSystem : includes
+}
+
+' Cross-package relationships
+User "*" -- "*" RecyclingCenter : visits
+Admin "1" -- "*" RecyclingCenter : manages
+SuperUser "1" -- "1" RecyclingCenter : oversees
+RecyclingFacilityRep "1" -- "1" RecyclingCenter : represents
+User "1" -- "*" Transaction : performs
+User "1" -- "*" PickUpRequest : makes
+User "1" -- "*" Notification : receives
+User "1" -- "*" Feedback : submits
+User "1" ..> SecurityManager : protected by
+User "1" ..> UserDocumentation : views
+Admin "1" ..> Dashboard : views
+Employee "1" ..> RoutePlanningSystem : uses
+User "1" ..> UserInterface : interacts with
+MapDisplay "1" ..> RecyclingCenter : displays
+MapDisplay "1" ..> RecyclingBin : displays
+MapDisplay "1" ..> SpecialWasteDropOffSite : displays
+MapDisplay "1" ..> SafeDisposalEvent : displays
+API "1" ..> RecyclingCenter : provides data for
+Developer "1" ..> API : uses
+
+@enduml
+
+    PlantUML result B: @startuml
+skinparam classAttributeIconSize 0
+
+package UserManagement {
+  class User {
+    +email: String
+    +password: String
+    +zipCode: String
+    +schedule: String
+    +favoriteCenters: List<RecyclingCenter>
+    +transactionHistory: List<Transaction>
+    +notificationsEnabled: Boolean
+    +profileCreated: Boolean
+    +signUp()
+    +login()
+    +logout()
+    +updateProfile()
+    +viewDocumentation()
+    +requestPasswordReset()
+    +receiveNotification(event: String)
+    +addToFavorites(center: RecyclingCenter)
+    +viewFavorites()
+    +viewTransactionHistory()
+    +uploadSchedule(schedule: String)
+    +linkEmail(email: String)
+    +contactAdmin(message: String)
+  }
+
+  class AnonymousUser {
+    +viewPublicInfo()
+    +enterZipCode(zipCode: String): List<RecyclingCenter>
+  }
+
+  class AuthenticatedUser extends User {
+    +createAccount()
+  }
+
+  class Publisher extends User {
+    +addRecyclingFacility(facility: RecyclingFacility)
+    +removeRecyclingFacility(facilityId: String)
+    +updateRecyclingFacility(facility: RecyclingFacility)
+    +readFeedback(): List<String>
+    +blockUser(ipAddress: String)
+    +viewDashboard(): Map<String, Object>
+    +handleUserActivity(activity: String)
+    +onboardRecyclingCenter(facility: RecyclingFacility)
+    +updateCenterInfo(facility: RecyclingFacility)
+    +viewUserStats(): Map<String, Object>
+    +replyToUser(userId: String, message: String)
+    +communicateWithFacility(facilityId: String, message: String)
+  }
+
+  class Executive extends User {
+    +viewCompanyData(): Map<String, Object>
+  }
+
+  class Employee extends User {
+    +accessRoutePlanner()
+    +receiveNotification(notification: String)
+  }
+
+  class HRDepartmentEmployee extends Employee {
+    +viewEmployeeInfo(): List<Employee>
+  }
+
+  class Accountant extends Employee {
+    +viewActivityFees(): List<Fee>
+  }
+
+  class Developer extends User {
+    +accessAPI()
+    +attendUIUXLessons()
+  }
+
+  enum NotificationType {
+    +NEW_EVENT
+    +ACCOUNT_UPDATE
+    +GENERAL
+  }
+
+  interface FeedbackHandler {
+    +submitFeedback(message: String)
+  }
+
+  interface DocumentViewer {
+    +viewDocument(documentId: String)
+  }
+
+  AuthenticatedUser --|> User
+  Publisher --|> User
+  Executive --|> User
+  Employee --|> User
+  HRDepartmentEmployee --|> Employee
+  Accountant --|> Employee
+  Developer --|> User
+  User ..> NotificationType : receives
+  User ..> FeedbackHandler
+  User ..> DocumentViewer
+}
+
+package DataPackageManagement {
+  class RecyclingCenter {
+    +facilityId: String
+    +name: String
+    +address: String
+    +latitude: Double
+    +longitude: Double
+    +hours: String
+    +acceptedMaterials: List<String>
+    +isEcoFriendly: Boolean
+    +updateInfo(info: Map<String, String>)
+    +acceptsMaterial(material: String): Boolean
+    +getDirections(): String
+  }
+
+  class Event {
+    +eventId: String
+    +name: String
+    +location: String
+    +dateTime: DateTime
+    +description: String
+  }
+
+  class Transaction {
+    +transactionId: String
+    +userId: String
+    +facilityId: String
+    +dateTime: DateTime
+    +items: List<String>
+  }
+
+  class Reward {
+    +rewardId: String
+    +name: String
+    +description: String
+    +pointsNeeded: Integer
+  }
+
+  class Fee {
+    +feeId: String
+    +name: String
+    +amount: Double
+    +description: String
+  }
+
+  enum MaterialType {
+    +PLASTIC
+    +PAPER
+    +GLASS
+    +METAL
+    +ELECTRONICS
+    +BATTERIES
+  }
+
+  RecyclingCenter "1" -- "*" MaterialType : accepts
+  User "1" -- "*" Transaction : has
+}
+
+package Registry {
+  class MapDisplay {
+    +showRecyclingBins(zipCode: String): Map<String, RecyclingCenter>
+    +showSpecialWasteSites(): Map<String, RecyclingCenter>
+    +showSafeDisposalEvents(): List<Event>
+  }
+
+  class RoutePlanner {
+    +getNearbyFacilities(zipCode: String): List<RecyclingCenter>
+    +getOptimalRoute(facilities: List<RecyclingCenter>, schedule: String): List<RecyclingCenter>
+    +recommendFacilities(schedule: String, materials: List<String>): List<RecyclingCenter>
+  }
+
+  class NotificationService {
+    +sendNotification(user: User, type: NotificationType, message: String)
+  }
+
+  class FeedbackSystem {
+    +submitFeedback(user: User, message: String)
+    +getFeedback(): List<String>
+  }
+
+  class AccountManager {
+    +createAccount(user: User): Boolean
+    +login(email: String, password: String): User
+    +logout(user: User): Boolean
+    +resetPassword(email: String): Boolean
+    +blockIPAddress(ipAddress: String): Boolean
+  }
+
+  class DataEncryptionService {
+    +encryptData(data: Object): String
+    +decryptData(encryptedData: String): Object
+  }
+
+  class UserActivityMonitor {
+    +logActivity(user: User, activity: String)
+    +getUsageStats(): Map<String, Integer>
+    +getLocationStats(): Map<String, Integer>
+    +getErrorLogs(): List<String>
+  }
+
+  class APIService {
+    +exposeRecyclingData(): String
+  }
+
+  class UIUXFramework {
+    +applyBootstrap()
+    +provideTemplates()
+    +ensureResponsiveness()
+  }
+
+  class RewardSystem {
+    +grantReward(user: User, reward: Reward)
+    +viewAvailableRewards(): List<Reward>
+  }
+
+  class DataStorage {
+    +storeUserData(user: User)
+    +getUserData(userId: String): User
+    +storeFacilityData(facility: RecyclingCenter)
+    +getFacilityData(facilityId: String): RecyclingCenter
+    +storeEventData(event: Event)
+    +getEventData(eventId: String): Event
+    +storeTransactionData(transaction: Transaction)
+    +getTransactionData(transactionId: String): Transaction
+    +storeFeedback(feedback: String, userId: String)
+    +getFeedback(): List<String>
+    +storeReward(reward: Reward)
+    +getReward(rewardId: String): Reward
+    +storeFee(fee: Fee)
+    +getFee(feeId: String): Fee
+  }
+
+  class ValidationService {
+    +isValidZipCode(zipCode: String): Boolean
+  }
+
+  MapDisplay ..> RecyclingCenter : uses
+  RoutePlanner ..> RecyclingCenter : uses
+  RoutePlanner ..> MaterialType : uses
+  NotificationService ..> User : sends to
+  FeedbackSystem ..> User : receives from
+  AccountManager ..> User : manages
+  UserActivityMonitor ..> User : tracks
+  RewardSystem ..> User : manages
+  DataStorage ..> User : stores
+  DataStorage ..> RecyclingCenter : stores
+  DataStorage ..> Event : stores
+  DataStorage ..> Transaction : stores
+  DataStorage ..> Reward : stores
+  DataStorage ..> Fee : stores
+  ValidationService ..> User : validates
+}
+
+User "0..*" -- "0..*" RecyclingCenter : can view
+User "0..*" -- "*" Event : can view
+User "1" -- "*" Reward : can earn
+RecyclingCenter "1" -- "*" Event : organizes
+RecyclingCenter "1" -- "*" Publisher : added by
+
+    Which PlantUML result better reflects the context based on the following
+    criteria:
+    − Uses appropriate conceptual classes aligned with the domain
+    − Applies essential associations that must be preserved for domain
+    reasoning or system behavior
+    − Models attributes with appropriate data types, avoiding design−specific
+    details
+    − Uses terminology consistent with the given context
+    − Adheres to UML class diagram standards
+
+    Please indicate whether Result A or B is more accurate overall, and briefly
+    explain your reasoning. Provide your answer with a score of 1−100.

@@ -1,0 +1,13 @@
+LLM Judge,Model 1,Model 2
+gpt4o,claude,gemini 2.0
+gpt4o,claude,llama2
+gpt4o,gemini 2.0,llama2
+claude,gpt4o,gemini 2.0
+claude,gpt4o,llama2
+claude,gemini 2.0,llama2
+gemini 2.0,gpt4o,claude
+gemini 2.0,gpt4o,llama2
+gemini 2.0,claude,llama2
+llama2,gpt4o,claude
+llama2,gpt4o,gemini 2.0
+llama2,claude,gemini 2.0

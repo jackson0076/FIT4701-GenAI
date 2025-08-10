@@ -1,0 +1,421 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package UserManagement {
+  class User {
+    +userId: String
+    +email: String
+    +password: String
+    +zipCode: String
+    +weeklySchedule: Schedule
+    +favoriteRecyclingCenters: List<RecyclingCenter>
+    +createAccount(): Boolean
+    +login(): Boolean
+    +updateProfile(): Boolean
+    +viewTransactionHistory(): List<Transaction>
+    +addFavoriteCenter(centerId: String): Boolean
+    +uploadSchedule(schedule: Schedule): Boolean
+    +linkEmailAccount(email: String): Boolean
+    +contactAdmin(message: String): Boolean
+    +provideFeedback(feedback: String): Boolean
+  }
+  
+  class Admin extends User {
+    +adminLevel: String
+    +addRecyclingFacility(facility: RecyclingCenter): Boolean
+    +removeRecyclingFacility(facilityId: String): Boolean
+    +readUserFeedback(): List<Feedback>
+    +blockUser(userId: String): Boolean
+    +viewDashboard(): Dashboard
+    +viewErrorLogs(): List<ErrorLog>
+    +communicateWithFacilities(message: String): Boolean
+    +onboardRecyclingCenter(center: RecyclingCenter): Boolean
+  }
+  
+  class SuperUser extends User {
+    +recyclingCenterId: String
+    +updateCenterInfo(centerId: String, info: CenterInfo): Boolean
+    +viewUserStats(): Statistics
+    +replyToUserQuestions(userId: String, reply: String): Boolean
+  }
+  
+  class RecyclingFacilityRep extends User {
+    +facilityId: String
+    +updateFacilityInfo(info: FacilityInfo): Boolean
+    +updateAcceptedMaterials(materials: List<MaterialType>): Boolean
+    +viewUserStatistics(): Statistics
+    +communicateWithAdmin(message: String): Boolean
+  }
+  
+  class Employee extends User {
+    +employeeId: String
+    +position: String
+    +accessRoutePlanningSystem(): RoutePlan
+    +getNotifications(): List<Notification>
+  }
+  
+  class HREmployee extends Employee {
+    +accessEmployeeInfo(): List<EmployeeInfo>
+  }
+  
+  class CompanyAccountant extends Employee {
+    +viewActivityFees(): List<Fee>
+    +createBillStatement(): BillStatement
+  }
+  
+  class Executive extends User {
+    +companyId: String
+    +accessCompanyData(): CompanyData
+  }
+  
+  class Developer extends User {
+    +accessAPI(): API
+    +useBootstrap(): Boolean
+    +attendUIUXLessons(): Boolean
+  }
+  
+  class Schedule {
+    +weekDays: List<DaySchedule>
+    +addDay(day: DaySchedule): Boolean
+    +removeDay(dayId: String): Boolean
+    +updateDay(dayId: String, schedule: DaySchedule): Boolean
+  }
+  
+  class DaySchedule {
+    +dayId: String
+    +dayName: String
+    +startTime: Time
+    +endTime: Time
+  }
+  
+  enum UserType {
+    +ANONYMOUS
+    +REGISTERED
+    +ADMIN
+    +SUPERUSER
+    +FACILITY_REP
+    +EMPLOYEE
+    +EXECUTIVE
+    +DEVELOPER
+  }
+  
+  User "1" o-- "1" Schedule : has
+  User "1" o-- "*" RecyclingCenter : favorites
+}
+
+package RecyclingManagement {
+  class RecyclingCenter {
+    +centerId: String
+    +name: String
+    +address: String
+    +zipCode: String
+    +contactInfo: String
+    +operatingHours: List<OperatingHours>
+    +acceptedMaterials: List<MaterialType>
+    +isEnvironmentFriendly: Boolean
+    +latitude: Double
+    +longitude: Double
+    +getDirections(): URL
+    +getOperatingHours(): List<OperatingHours>
+    +getAcceptedMaterials(): List<MaterialType>
+    +isOpen(dateTime: DateTime): Boolean
+  }
+  
+  class OperatingHours {
+    +dayOfWeek: String
+    +openTime: Time
+    +closeTime: Time
+    +isHoliday: Boolean
+  }
+  
+  class MaterialType {
+    +typeId: String
+    +name: String
+    +description: String
+    +recyclingInstructions: String
+  }
+  
+  class RecyclingBin {
+    +binId: String
+    +location: Location
+    +type: String
+    +capacity: Double
+    +currentFillLevel: Double
+    +acceptedMaterials: List<MaterialType>
+  }
+  
+  class SpecialWasteDropOffSite {
+    +siteId: String
+    +name: String
+    +location: Location
+    +acceptedSpecialWaste: List<MaterialType>
+    +operatingHours: List<OperatingHours>
+  }
+  
+  class SafeDisposalEvent {
+    +eventId: String
+    +name: String
+    +description: String
+    +location: Location
+    +startDateTime: DateTime
+    +endDateTime: DateTime
+    +acceptedMaterials: List<MaterialType>
+  }
+  
+  class Location {
+    +latitude: Double
+    +longitude: Double
+    +address: String
+    +zipCode: String
+    +getMapURL(): URL
+  }
+  
+  enum CenterType {
+    +RECYCLING_CENTER
+    +DONATION_CENTER
+    +DISPOSAL_SITE
+    +SPECIAL_WASTE_SITE
+  }
+  
+  RecyclingCenter "1" o-- "*" OperatingHours : has
+  RecyclingCenter "1" o-- "*" MaterialType : accepts
+  RecyclingCenter "1" o-- "1" Location : located at
+  RecyclingBin "1" o-- "1" Location : located at
+  RecyclingBin "1" o-- "*" MaterialType : accepts
+  SpecialWasteDropOffSite "1" o-- "1" Location : located at
+  SpecialWasteDropOffSite "1" o-- "*" MaterialType : accepts
+  SpecialWasteDropOffSite "1" o-- "*" OperatingHours : has
+  SafeDisposalEvent "1" o-- "1" Location : held at
+  SafeDisposalEvent "1" o-- "*" MaterialType : accepts
+}
+
+package TransactionManagement {
+  class Transaction {
+    +transactionId: String
+    +userId: String
+    +centerId: String
+    +materialTypes: List<MaterialType>
+    +quantity: Double
+    +timestamp: DateTime
+    +status: TransactionStatus
+    +getDetails(): TransactionDetails
+  }
+  
+  class PickUpRequest {
+    +requestId: String
+    +userId: String
+    +address: String
+    +preferredPickUpTime: DateTime
+    +flexibleTimeRange: TimeRange
+    +materialTypes: List<MaterialType>
+    +status: RequestStatus
+    +schedulePickUp(): Boolean
+    +updatePickUpTime(newTime: DateTime): Boolean
+    +cancelRequest(): Boolean
+  }
+  
+  class TimeRange {
+    +startTime: DateTime
+    +endTime: DateTime
+    +isWithinRange(time: DateTime): Boolean
+  }
+  
+  enum TransactionStatus {
+    +COMPLETED
+    +PENDING
+    +CANCELLED
+    +FAILED
+  }
+  
+  enum RequestStatus {
+    +SCHEDULED
+    +PENDING
+    +COMPLETED
+    +CANCELLED
+  }
+  
+  Transaction "1" -- "1" User : performed by
+  Transaction "1" -- "1" RecyclingCenter : at
+  Transaction "1" -- "*" MaterialType : includes
+  PickUpRequest "1" -- "1" User : requested by
+  PickUpRequest "1" -- "*" MaterialType : includes
+  PickUpRequest "1" o-- "1" TimeRange : has
+}
+
+package SystemManagement {
+  class Dashboard {
+    +stats: Statistics
+    +centerStatuses: List<CenterStatus>
+    +userActivities: List<UserActivity>
+    +viewStatistics(): Statistics
+    +monitorCenters(): List<CenterStatus>
+    +trackUserActivity(): List<UserActivity>
+  }
+  
+  class Statistics {
+    +userVisits: Integer
+    +dropOffs: Integer
+    +pickUps: Integer
+    +popularCenters: List<RecyclingCenter>
+    +neighborhoodActivity: Map<String, Integer>
+    +generateReport(): Report
+  }
+  
+  class UserActivity {
+    +activityId: String
+    +userId: String
+    +actionType: String
+    +timestamp: DateTime
+    +ipAddress: String
+    +deviceInfo: String
+  }
+  
+  class ErrorLog {
+    +logId: String
+    +userId: String
+    +errorType: String
+    +errorMessage: String
+    +timestamp: DateTime
+    +stackTrace: String
+  }
+  
+  class Notification {
+    +notificationId: String
+    +userId: String
+    +message: String
+    +timestamp: DateTime
+    +isRead: Boolean
+    +send(): Boolean
+    +markAsRead(): Boolean
+  }
+  
+  class Feedback {
+    +feedbackId: String
+    +userId: String
+    +message: String
+    +rating: Integer
+    +timestamp: DateTime
+    +respond(response: String): Boolean
+  }
+  
+  class API {
+    +apiKey: String
+    +endpoints: List<String>
+    +documentation: String
+    +authenticate(credentials: Credentials): Boolean
+    +makeRequest(endpoint: String, params: Map): Response
+  }
+  
+  class SecurityManager {
+    +encryptData(data: Data): EncryptedData
+    +validateZipCode(zipCode: String): Boolean
+    +blockIPAddress(ipAddress: String): Boolean
+    +secureUserData(): Boolean
+  }
+  
+  class RoutePlanningSystem {
+    +employeeId: String
+    +currentLocation: Location
+    +destination: List<Location>
+    +optimizedRoute: Route
+    +planRoute(): Route
+    +updateLocation(location: Location): Boolean
+  }
+  
+  class Route {
+    +routeId: String
+    +waypoints: List<Location>
+    +estimatedTime: Time
+    +distance: Double
+    +getDirections(): List<Direction>
+  }
+  
+  class UserDocumentation {
+    +sections: List<DocumentationSection>
+    +version: String
+    +lastUpdated: DateTime
+    +viewSection(sectionId: String): DocumentationSection
+    +searchHelp(query: String): List<SearchResult>
+  }
+  
+  Dashboard "1" o-- "1" Statistics : includes
+  Dashboard "1" o-- "*" UserActivity : monitors
+  Dashboard "1" -- "*" RecyclingCenter : tracks
+  RoutePlanningSystem "1" o-- "1" Route : generates
+  RoutePlanningSystem "1" o-- "*" Location : includes
+}
+
+package UIUXManagement {
+  class UserInterface {
+    +theme: String
+    +layout: String
+    +responsiveness: Boolean
+    +accessibilityFeatures: List<String>
+    +renderOnDevice(deviceType: String): UI
+    +provideFeedback(action: String): FeedbackUI
+  }
+  
+  class MapDisplay {
+    +centerLocation: Location
+    +zoomLevel: Integer
+    +visibleCenters: List<RecyclingCenter>
+    +visibleBins: List<RecyclingBin>
+    +visibleSpecialSites: List<SpecialWasteDropOffSite>
+    +showCenters(): List<RecyclingCenter>
+    +showPublicBins(): List<RecyclingBin>
+    +showSpecialWasteSites(): List<SpecialWasteDropOffSite>
+    +showEvents(): List<SafeDisposalEvent>
+    +getDirectionsTo(locationId: String): Directions
+  }
+  
+  class RewardSystem {
+    +userId: String
+    +pointsEarned: Integer
+    +rewardTiers: List<RewardTier>
+    +availableRewards: List<Reward>
+    +earnPoints(action: String, amount: Integer): Boolean
+    +redeemReward(rewardId: String): Boolean
+    +viewRewards(): List<Reward>
+  }
+  
+  class Reward {
+    +rewardId: String
+    +name: String
+    +description: String
+    +pointsRequired: Integer
+    +expiryDate: DateTime
+  }
+  
+  class RewardTier {
+    +tierId: String
+    +name: String
+    +minimumPoints: Integer
+    +benefits: List<String>
+  }
+  
+  UserInterface "1" o-- "1" MapDisplay : includes
+  UserInterface "1" o-- "1" RewardSystem : includes
+}
+
+' Cross-package relationships
+User "*" -- "*" RecyclingCenter : visits
+Admin "1" -- "*" RecyclingCenter : manages
+SuperUser "1" -- "1" RecyclingCenter : oversees
+RecyclingFacilityRep "1" -- "1" RecyclingCenter : represents
+User "1" -- "*" Transaction : performs
+User "1" -- "*" PickUpRequest : makes
+User "1" -- "*" Notification : receives
+User "1" -- "*" Feedback : submits
+User "1" ..> SecurityManager : protected by
+User "1" ..> UserDocumentation : views
+Admin "1" ..> Dashboard : views
+Employee "1" ..> RoutePlanningSystem : uses
+User "1" ..> UserInterface : interacts with
+MapDisplay "1" ..> RecyclingCenter : displays
+MapDisplay "1" ..> RecyclingBin : displays
+MapDisplay "1" ..> SpecialWasteDropOffSite : displays
+MapDisplay "1" ..> SafeDisposalEvent : displays
+API "1" ..> RecyclingCenter : provides data for
+Developer "1" ..> API : uses
+
+@enduml
