@@ -1,0 +1,98 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "shared" {
+  abstract class StateMachine {
+    +name : String
+    +lastEvent : String
+    +updateState() : void
+    +getStateName() : String
+  }
+}
+
+package "actors" {
+  class Pilot {
+    +inControl : boolean
+    +isInControl() : boolean
+    +takeControl() : void
+    +releaseControl() : void
+  }
+}
+
+package "support" {
+  interface SupportProvider {
+    +isSupported() : boolean
+    +hasFailure() : boolean
+  }
+
+  class SupportSystem {
+    +supported : boolean
+    +apfail : boolean
+    +isSupported() : boolean
+    +hasFailure() : boolean
+    +setSupported(supported : boolean) : void
+    +setFailure(failed : boolean) : void
+  }
+
+  SupportSystem ..|> SupportProvider
+}
+
+package "sensors" {
+  interface DataProvider {
+    +isDataGood() : boolean
+    +isLimitsExceeded() : boolean
+  }
+
+  enum SensorState {
+    NOMINAL
+    TRANSITION
+    FAULT
+  }
+
+  class Sensor {
+    +state : SensorState
+    +limitsExceeded : boolean
+    +dataGood : boolean
+    +requestFromAutopilot : boolean
+    +reportedMode : AutopilotMode
+    +updateState(support : SupportProvider, autopilot : Autopilot) : void
+    +isDataGood() : boolean
+    +isLimitsExceeded() : boolean
+    +setLimitsExceeded(exceeded : boolean) : void
+    +receiveAutopilotReport(request : boolean, mode : AutopilotMode) : void
+  }
+
+  Sensor ..|> DataProvider
+  Sensor --|> StateMachine
+}
+
+package "control" {
+  enum AutopilotMode {
+    STANDBY
+    TRANSITION
+    NOMINAL
+    MANEUVER
+    PULLUP
+  }
+
+  class Autopilot {
+    +state : AutopilotMode
+    +requestSupport : boolean
+    +pullupLatched : boolean
+    +evaluateTransitions(pilot : Pilot, sensor : Sensor, support : SupportProvider) : void
+    +latchPullup() : void
+    +clearPullup() : void
+    +isRequestingSupport() : boolean
+    +reportMode() : AutopilotMode
+  }
+
+  Autopilot --|> StateMachine
+}
+
+' Associations with multiplicities and labels
+Autopilot "1" --> "1" Sensor : monitors & requests support
+Autopilot "1" --> "1" Pilot : reads control state
+Autopilot "1" --> "1" SupportProvider : queries support status
+Sensor "1" --> "1" Autopilot : receives request + mode
+
+@enduml

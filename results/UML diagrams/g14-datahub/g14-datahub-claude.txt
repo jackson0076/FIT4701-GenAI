@@ -1,0 +1,196 @@
+@startuml
+
+package "user" {
+    abstract class User {
+        +String id
+        +String email
+        +String name
+        +String profileUrl
+        +Date createdAt
+        +Date lastLoginAt
+        +Boolean isActive
+        +String signup()
+        +void updateProfile()
+        +Boolean authenticate()
+    }
+    
+    class Publisher {
+        +String organizationId
+        +List<String> packageIds
+        +DataPackage publishDataPackage(DataPackage package)
+        +void unpublishDataPackage(String packageId)
+        +void deleteDataPackage(String packageId)
+        +DataPackage restoreDataPackage(String packageId)
+        +ValidationResult validateDataPackage(DataPackage package)
+        +DataPackage previewDataPackage(DataPackage package)
+        +Version tagVersion(String packageId, String tag)
+        +void configureClient()
+    }
+    
+    class Consumer {
+        +List<String> subscribedPackages
+        +DataPackage viewDataPackage(String packageId)
+        +DataPackage downloadDataPackage(String packageId, String version)
+        +List<DataPackage> searchDataPackages(String query)
+        +void subscribeToUpdates(String packageId)
+        +DataPackage updateLocalPackage(String packageId)
+        +Database downloadAsSQLite(String packageId)
+    }
+    
+    class Admin {
+        +String siteTitle
+        +Map<String, Object> configParams
+        +Invitation inviteUser(String email)
+        +void setConfiguration(String key, Object value)
+        +Map<String, Integer> getUsageMetrics()
+        +void managePricingPlans()
+    }
+    
+    Publisher --|> User
+    Consumer --|> User
+    Admin --|> User
+}
+
+package "data" {
+    class DataPackage {
+        +String id
+        +String name
+        +String description
+        +String publisherId
+        +Date createdAt
+        +Date updatedAt
+        +Boolean isPublic
+        +Boolean isDeleted
+        +Integer downloadCount
+        +String currentVersion
+        +List<String> tags
+        +Map<String, Object> metadata
+        +List<Resource> resources
+        +ValidationResult validate()
+        +String generateDownloadUrl()
+        +void incrementDownloadCount()
+    }
+    
+    class Version {
+        +String id
+        +String packageId
+        +String versionNumber
+        +String tag
+        +Date createdAt
+        +Map<String, Object> schema
+        +List<String> changeLog
+        +Boolean isStable
+        +String getDownloadUrl()
+        +Map<String, Object> compareWith(Version other)
+    }
+    
+    class Resource {
+        +String id
+        +String name
+        +String url
+        +String format
+        +Long size
+        +String checksum
+        +Boolean isCached
+        +String getCachedUrl()
+    }
+    
+    enum VisibilityLevel {
+        PUBLIC
+        PRIVATE
+        RESTRICTED
+    }
+    
+    class ValidationResult {
+        +Boolean isValid
+        +List<String> errors
+        +List<String> warnings
+        +Date validatedAt
+        +String getReport()
+    }
+    
+    DataPackage --> "1..*" Version : has
+    DataPackage --> "*" Resource : contains
+    DataPackage --> "1" VisibilityLevel : visibility
+    Version --> "0..1" ValidationResult : validated
+}
+
+package "billing" {
+    class PricingPlan {
+        +String id
+        +String name
+        +Double monthlyPrice
+        +Integer maxDataPackages
+        +Integer maxPrivatePackages
+        +Long storageLimit
+        +Boolean hasApiAccess
+        +String getFeatures()
+    }
+    
+    class Subscription {
+        +String id
+        +String userId
+        +String planId
+        +Date startDate
+        +Date endDate
+        +Boolean isActive
+        +Double calculateCost()
+        +void upgrade(String newPlanId)
+        +void cancel()
+    }
+    
+    User --> "0..1" Subscription : subscribes
+    Subscription --> "1" PricingPlan : plan
+}
+
+package "organization" {
+    class Organization {
+        +String id
+        +String name
+        +String description
+        +String ownerId
+        +Date createdAt
+        +void addMember(String userId, Role role)
+        +void removeMember(String userId)
+        +void updateMemberRole(String userId, Role newRole)
+        +List<Membership> getMembers()
+    }
+    
+    class Membership {
+        +String userId
+        +String organizationId
+        +Role role
+        +Date joinedAt
+        +Boolean isActive
+    }
+    
+    enum Role {
+        OWNER
+        MEMBER
+    }
+    
+    class Invitation {
+        +String id
+        +String email
+        +String organizationId
+        +String invitedBy
+        +Date createdAt
+        +Date expiresAt
+        +Boolean isAccepted
+        +String token
+        +void accept()
+        +Boolean isExpired()
+    }
+    
+    Organization --> "*" Membership : members
+    Membership --> "1" Role : role
+    Organization --> "*" Invitation : invitations
+    Publisher --> "0..1" Organization : belongsTo
+}
+
+' Key associations
+Publisher --> "*" DataPackage : publishes
+Consumer --> "*" DataPackage : downloads
+DataPackage --> "1" Publisher : publishedBy
+
+@enduml

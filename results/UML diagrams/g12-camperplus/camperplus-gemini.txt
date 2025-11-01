@@ -1,0 +1,210 @@
+@startuml
+!pragma layout smetana
+
+package "common" {
+    class User {
+        +String userId
+        +String username
+        +String passwordHash
+        +String email
+        +String firstName
+        +String lastName
+        +String phoneNumber
+    }
+}
+
+package "management" {
+    class CampAdministrator {
+        +void addCamper(Camper camper)
+        +void removeCamper(Camper camper)
+        +void suspendCamper(Camper camper)
+        +void warnStaff(Staff staff)
+        +void createRule(Rule rule)
+        +void modifyRule(Rule rule)
+        +void scheduleActivity(Activity activity)
+        +void modifyActivity(Activity activity)
+        +void deleteActivity(Activity activity)
+        +void assignStaffPosition(Staff staff, Position position)
+        +void setReminder(Reminder reminder)
+        +void createNametag(Camper camper)
+        +void uploadForm(Form form)
+        +void updateCamperInfo(Camper camper)
+        +void deleteCamper(Camper camper)
+        +void updateParentInfo(Parent parent)
+        +void deleteParent(Parent parent)
+        +void updateGroupInfo(CampGroup campGroup)
+        +void createRegistrationForm(RegistrationForm form)
+        +void notifyParents(String message)
+    }
+
+    class Rule {
+        +String ruleId
+        +String description
+        +Date effectiveDate
+    }
+
+    class Reminder {
+        +String reminderId
+        +String message
+        +Date dueDate
+    }
+
+    class Position {
+        +String positionId
+        +String title
+        +String description
+    }
+
+    class RegistrationForm {
+        +String formId
+        +String formName
+        +String description
+    }
+}
+
+package "camp" {
+    class Camp {
+        +String campId
+        +String campName
+        +String year
+    }
+
+    class Camper {
+        +String camperId
+        +String emergencyContactInfo
+        +String medicalInfo
+        +boolean isSuspended
+        +void createNametag()
+        +void viewSchedule()
+        +void submitForm(Form form)
+    }
+    
+    class Parent {
+        +String parentId
+        +String address
+        +void createAccount()
+        +void enrollChildren(Camper... children)
+        +void viewChildSchedule()
+        +void submitFeedback(Feedback feedback)
+        +void submitForm(Form form)
+        +void viewPayments()
+        +void messageCounselor(Counselor counselor, String message)
+        +void viewChildrenInfo()
+        +void editChildrenInfo()
+        +void viewSubmittedForms()
+    }
+
+    class Staff {
+        +String staffId
+        +String position
+    }
+
+    class Counselor {
+        +void takeAttendance(CampGroup group)
+        +void submitCompletionReport(Task task)
+        +void reportCamper(Camper camper)
+        +void reportSupplies()
+        +void reportRepairs()
+    }
+
+    class CampGroup {
+        +String groupId
+        +String groupName
+        +void viewActivities()
+    }
+
+    class Attendance {
+        +String attendanceId
+        +Date date
+        +boolean present
+    }
+}
+
+package "activities" {
+    class Activity {
+        +String activityId
+        +String activityName
+        +String description
+        +Date scheduledTime
+        +String location
+        +String groupName
+    }
+
+    class Task {
+        +String taskId
+        +String taskName
+        +String description
+    }
+}
+
+package "forms" {
+    abstract class Form {
+        +String formId
+        +String formName
+        +Date submissionDate
+    }
+
+    class ConsentForm extends Form {
+        +boolean isSigned
+    }
+
+    class Feedback extends Form {
+        +String content
+    }
+    
+    class MedicalForm extends Form {
+        +String medicalInfo
+    }
+}
+
+package "reports" {
+    class CompletionReport {
+        +String reportId
+        +Date submissionDate
+        +String content
+    }
+
+    class UsageReport {
+        +String reportId
+        +Date reportDate
+        +String facilityName
+        +int usageCount
+    }
+}
+
+User <|-- CampAdministrator
+User <|-- Parent
+User <|-- Staff
+Staff <|-- Counselor
+
+CampAdministrator "1" -- "0..*" Rule : manages >
+CampAdministrator "1" -- "0..*" Reminder : manages >
+CampAdministrator "1" -- "0..*" Position : assigns >
+CampAdministrator "1" -- "0..*" RegistrationForm : creates >
+CampAdministrator "1" -- "0..*" Feedback : reviews >
+CampAdministrator "1" -- "0..*" Camp : manages >
+
+Camp "1" -- "0..*" Camper : enrolls >
+Camp "1" -- "0..*" Parent : enrolls >
+Camp "1" -- "0..*" Staff : employs >
+
+Parent "1" -- "1..*" Camper : has >
+Parent "1" -- "0..*" Form : submits >
+
+Camper "1" -- "0..*" Attendance : attends >
+Camper "1" -- "0..*" Form : submits >
+Camper "1" -- "0..*" CampGroup : is in >
+Camper "1" -- "0..*" Counselor : assigned to >
+
+Staff "1" -- "0..*" Activity : manages >
+Staff "1" -- "0..*" Task : assigned >
+Staff "1" -- "0..*" CompletionReport : submits >
+
+Counselor "1" -- "0..*" CampGroup : leads >
+
+CampGroup "1" -- "0..*" Activity : has >
+CampGroup "1" -- "0..*" Camper : contains >
+
+Activity "1" -- "0..*" UsageReport : generates >
+Activity "1" -- "1" Task : is comprised of >
+@enduml

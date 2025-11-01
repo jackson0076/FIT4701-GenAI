@@ -1,0 +1,82 @@
+@startuml
+
+package "domain" {
+	class Patient {
+		+String id
+		+String name
+		+Date birthdate
+		+List<MedicalRecord> medical_records
+	}
+	class MedicalRecord {
+		+String id
+		+Patient patient
+		+List<Medication> medications
+		+List<Treatment> treatments
+		+List<LabResult> lab_results
+	}
+	class Medication {
+		+String id
+		+MedicalRecord medical_record
+		+String name
+		+Date startDate
+		+Date endDate
+	}
+	class Treatment {
+		+String id
+		+MedicalRecord medical_record
+		+String name
+		+Date dateApplied
+	}
+	class LabResult {
+		+String id
+		+MedicalRecord medical_record
+		+String testName
+		+String testValue
+	}
+}
+
+package "domain" {
+	class User {
+		+String id
+		+String username
+		+String password
+	}
+	class Doctor extends User {
+		+List<Patient> patients
+	}
+	class Receptionist extends User {
+		+List<Patient> patients
+	}
+	class UHOPEEmployee extends User {
+		+List<Patient> patients
+	}
+}
+
+package "domain" {
+	class NationalDatabase {
+		+List<MedicalRecord> medical_records
+	}
+	class EMRDatabase {
+		+List<MedicalRecord> medical_records
+		+NationalDatabase national_database
+	}
+}
+
+class Patient extends User {
+	+String id
+	+String name
+	+Date birthdate
+	+List<MedicalRecord> medical_records
+}
+
+Patient --> "*" MedicalRecord
+Doctor --|> UHOPEEmployee
+Receptionist --|> UHOPEEmployee
+
+MedicalRecord --> "*" Medication
+MedicalRecord --> "*" Treatment
+MedicalRecord --> "*" LabResult
+
+EMRDatabase --> "1" NationalDatabase
+
+@enduml

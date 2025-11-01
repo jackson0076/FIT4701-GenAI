@@ -1,0 +1,73 @@
+@startuml
+
+package "Controls" {
+  class CockpitControls {
+    +autopilotEngageSwitch: boolean
+    +headingSwitch: boolean
+    +turnKnobCommand: double
+    +headingReference: double
+  }
+
+  interface AutopilotSystemInterface {
+    +engage(): void
+    +disengage(): void
+  }
+}
+
+package "Actuators" {
+  class RollActuator {
+    +command: double
+    +sendCommand(command: double): void
+  }
+}
+
+package "Sensors" {
+  class AircraftSensors {
+    +rollAngle: double
+    +getActualRollAngle(): double
+  }
+}
+
+package "Autopilot" {
+  abstract class AutopilotMode {
+    {abstract} +activate(autopilot: Autopilot): void
+    {abstract} +deactivate(): void
+    {abstract} +update(autopilot: Autopilot): void
+  }
+
+  class Autopilot {
+    -isActive: boolean
+    -currentMode: AutopilotMode
+    -rollHoldReference: double
+    -headingHoldReference: double
+    -maxRollAngle: double = 30.0
+    -maxAileronCommand: double = 15.0
+    -turnKnobLimit: double = 30.0
+    -turnKnobThreshold: double = 3.0
+    
+    +engage(): void
+    +disengage(): void
+    +update(): void
+    -setRollHoldReference(): void
+    -selectLateralMode(): void
+  }
+
+  class RollHoldMode extends AutopilotMode {
+    -isSteadyStateTracked(): boolean
+    -isOvershootWithinLimit(): boolean
+    -hasSufficientBandwidth(): boolean
+    -isRollRateWithinLimit(): boolean
+    -isRollAngleWithinLimit(): boolean
+  }
+  
+  class HeadingHoldMode extends AutopilotMode {
+  }
+}
+
+Controls.CockpitControls "1" --> "1" Autopilot.Autopilot : commands
+Autopilot.Autopilot "1" --> "1" Actuators.RollActuator : commands
+Autopilot.Autopilot "1" --> "1" Sensors.AircraftSensors : reads
+Autopilot.Autopilot "1" -- "1..*" Autopilot.AutopilotMode : manages
+Autopilot.Autopilot "-isActive" -- "1" RollActuator : commands
+
+@enduml

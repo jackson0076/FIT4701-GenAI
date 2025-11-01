@@ -1,0 +1,475 @@
+@startuml
+
+skinparam packageStyle rect
+skinparam classAttributeIconSize 0
+
+' ========= AUTH =========
+package "auth" {
+  enum IdentityProvider {
+    GOOGLE
+    GITHUB
+    PASSWORD
+  }
+
+  class OAuthCredential {
+    - id: UUID
+    + provider: IdentityProvider
+    + externalUserId: String
+    + accessToken: String
+    + createdAt: DateTime
+  }
+
+  class AuthService {
+    + User signupWithPassword(email: String, password: String)
+    + User signupWithOAuth(provider: IdentityProvider, token: String)
+    + User login(email: String, password: String)
+    + void logout(userId: UUID)
+  }
+}
+
+' ========= ACCOUNTS & ROLES =========
+package "accounts" {
+  abstract class User {
+    + id: UUID
+    + email: String
+    + displayName: String
+    + createdAt: DateTime
+    + isActive: boolean
+    + boolean hasRole(role: String)
+  }
+
+  class Consumer
+  class Publisher
+  class Admin
+
+  class AccountService {
+    + List<String> getNextSteps(userId: UUID)
+    + void updateProfile(userId: UUID, displayName: String)
+  }
+}
+
+Consumer --|> User
+Publisher --|> User
+Admin --|> User
+
+' ========= ORGANIZATIONS =========
+package "org" {
+  enum OrgRole {
+    OWNER
+    MEMBER
+  }
+
+  enum InviteStatus {
+    PENDING
+    ACCEPTED
+    EXPIRED
+    REVOKED
+  }
+
+  class PublisherOrganization {
+    + id: UUID
+    + name: String
+    + slug: String
+    + createdAt: DateTime
+    + void addMember(userId: UUID, role: OrgRole)
+    + void removeMember(userId: UUID)
+  }
+
+  class Membership {
+    + id: UUID
+    + userId: UUID
+    + orgId: UUID
+    + role: OrgRole
+    + invitedBy: UUID
+    + since: DateTime
+  }
+
+  class Invitation {
+    + id: UUID
+    + email: String
+    + token: String
+    + status: InviteStatus
+    + invitedBy: UUID
+    + orgId: UUID
+    + createdAt: DateTime
+    + void send()
+    + void revoke()
+  }
+
+  class OrgService {
+    + Invitation inviteByEmail(orgId: UUID, email: String, role: OrgRole, invitedBy: UUID)
+    + void makeOwner(orgId: UUID, userId: UUID)
+    + void removeOwner(orgId: UUID, userId: UUID)
+    + List<Membership> listMembers(orgId: UUID)
+  }
+}
+
+User "1" -- "0..*" Membership : memberships
+Membership "1" -- "1" PublisherOrganization : organization
+Invitation "0..*" --> "1" PublisherOrganization : forOrg
+Admin "1" --> "0..*" Invitation : creates
+
+' ========= CATALOG (PACKAGES) =========
+package "catalog" {
+  enum Visibility {
+    PUBLIC
+    PRIVATE
+  }
+
+  enum PackageStatus {
+    DRAFT
+    PUBLISHED
+    UNPUBLISHED
+    DELETED
+  }
+
+  class AccessPolicy {
+    + id: UUID
+    + visibility: Visibility
+    + allowedUserIds: Set<UUID>
+    + void allowUser(userId: UUID)
+    + void disallowUser(userId: UUID)
+    + boolean canView(userId: UUID)
+  }
+
+  class Registry {
+    + id: UUID
+    + title: String
+    + DataPackage register(pkg: DataPackage)
+    + DataPackage findBySlug(slug: String)
+  }
+
+  class DataPackage {
+    + id: UUID
+    + name: String
+    + slug: String
+    + description: String
+    + status: PackageStatus
+    + createdAt: DateTime
+    + updatedAt: DateTime
+    + void addResource(res: Resource)
+    + DataPackageVersion createVersion(version: String)
+  }
+
+  class Resource {
+    + id: UUID
+    + name: String
+    + uri: URI
+    + format: String
+    + sizeBytes: long
+    + hash: String
+  }
+
+  class DataBundle {
+    + File createZip(version: versioning.DataPackageVersion)
+    + File createSQLite(version: versioning.DataPackageVersion)
+  }
+
+  class ExampleGallery {
+    + List<DataPackage> listExamples(limit: int)
+  }
+}
+
+PublisherOrganization "1" -- "0..*" DataPackage : owns >
+DataPackage "1" --> "1" AccessPolicy : accessPolicy
+DataPackage "1" -- "1..*" Resource : contains >
+ExampleGallery "1" --> "0..*" DataPackage : features
+Registry "1" --> "0..*" DataPackage : indexes
+
+' ========= VERSIONING =========
+package "versioning" {
+  interface Versioned {
+    + String getVersion()
+  }
+
+  class DataPackageVersion {
+    + id: UUID
+    + packageId: UUID
+    + version: String
+    + createdAt: DateTime
+    + changelog: String
+    + validated: boolean
+    + List<Resource> getResourcesSnapshot()
+    + boolean isValid()
+  }
+
+  class Tag {
+    + id: UUID
+    + packageId: UUID
+    + name: String
+    + createdAt: DateTime
+  }
+
+  class SchemaDiff {
+    + addedFields: List<String>
+    + removedFields: List<String>
+    + changedTypes: List<String>
+  }
+
+  class DiffReport {
+    + fromVersion: String
+    + toVersion: String
+    + schemaDiff: SchemaDiff
+    + summary: String
+    + breakingChanges: int
+  }
+
+  class VersionService {
+    + Tag tagVersion(pkgId: UUID, version: String, overwrite: boolean)
+    + DataPackageVersion getVersion(pkgId: UUID, version: String)
+    + DiffReport compareVersions(pkgId: UUID, fromVersion: String, toVersion: String)
+  }
+}
+
+versioning.DataPackageVersion ..|> Versioned
+DataPackage "1" -- "1..*" versioning.DataPackageVersion : versions >
+versioning.Tag "0..*" --> "1" versioning.DataPackageVersion : labels >
+
+' ========= VALIDATION =========
+package "validation" {
+  interface Validatable {
+    + validationReport(): ValidationReport
+  }
+
+  class Validator {
+    + ValidationReport validate(pkg: catalog.DataPackage)
+    + ValidationReport validateOnPublish(pkg: catalog.DataPackage)
+  }
+
+  class ValidationReport {
+    + id: UUID
+    + valid: boolean
+    + errors: List<ValidationError>
+    + warnings: List<String>
+  }
+
+  class ValidationError {
+    + path: String
+    + message: String
+    + code: String
+  }
+}
+
+catalog.DataPackage ..|> validation.Validatable
+validation.ValidationReport "1" --> "0..*" validation.ValidationError : has >
+
+' ========= PUBLISHING / IMPORT / CLI =========
+package "publishing" {
+  class PublisherClient {
+    + id: UUID
+    + endpoint: URI
+    - apiKey: String
+    + void configure(endpoint: URI, apiKey: String)
+    + validation.ValidationReport previewViews(descriptorJson: String)
+  }
+
+  class PublishCLI {
+    + int run(args: String[])
+    + validation.ValidationReport validate(descriptorPath: String)
+    + versioning.DataPackageVersion publish(path: String)
+    + String previewViews(descriptorPath: String)
+  }
+
+  class PublishingService {
+    + versioning.DataPackageVersion publish(pkg: catalog.DataPackage, client: PublisherClient)
+    + versioning.DataPackageVersion update(pkgId: UUID, client: PublisherClient)
+    + boolean unpublish(pkgId: UUID)
+    + boolean delete(pkgId: UUID, permanent: boolean)
+    + boolean restore(pkgId: UUID)
+    + boolean undelete(pkgId: UUID)
+  }
+
+  class ImportService {
+    + catalog.DataPackage importFromUrl(descriptorUrl: URI, owner: org.PublisherOrganization)
+  }
+}
+
+PublishCLI "1" --> "1" PublisherClient
+PublishingService "1" --> "0..*" catalog.DataPackage : publishes >
+PublishingService "1" ..> validation.Validator : uses
+ImportService "1" --> "0..*" catalog.DataPackage : imports >
+
+' ========= STORAGE & CACHE =========
+package "storage" {
+  class StorageLocation {
+    + uri: URI
+    + provider: String
+    + sizeBytes: long
+    + checksum: String
+  }
+
+  class ResourceCache {
+    + id: UUID
+    + cachedAt: DateTime
+    + StorageLocation cache(res: catalog.Resource)
+    + StorageLocation get(resId: UUID)
+  }
+
+  class CacheService {
+    + StorageLocation cacheResource(res: catalog.Resource)
+    + StorageLocation getCachedLocation(resId: UUID)
+  }
+}
+
+catalog.Resource "0..1" --> "1" storage.StorageLocation : cachedAt >
+storage.CacheService "1" --> "0..*" storage.StorageLocation : manages >
+storage.CacheService "1" ..> storage.ResourceCache : uses
+
+' ========= SEARCH =========
+package "search" {
+  class SearchQuery {
+    + term: String
+    + filters: Map<String,String>
+    + limit: int
+    + offset: int
+  }
+
+  class SearchResult {
+    + packageId: UUID
+    + name: String
+    + snippet: String
+    + score: double
+  }
+
+  class Index {
+    + id: UUID
+    + String add(docId: UUID, text: String)
+  }
+
+  class SearchService {
+    + List<SearchResult> search(query: SearchQuery)
+    + void index(pkg: catalog.DataPackage)
+  }
+}
+
+search.SearchService "1" --> "1" search.Index
+search.SearchService "1" --> "0..*" catalog.DataPackage : indexes >
+
+' ========= ANALYTICS =========
+package "analytics" {
+  class DownloadRecord {
+    + id: UUID
+    + packageVersionId: UUID
+    + userId: UUID
+    + downloadedAt: DateTime
+  }
+
+  class SiteActivity {
+    + packagesPublishedLast30d: int
+    + activeUsersLast30d: int
+    + downloadsLast30d: int
+  }
+
+  class MetricsService {
+    + void recordDownload(packageVersionId: UUID, userId: UUID)
+    + int getTotalDownloads(pkgId: UUID)
+    + SiteActivity getSiteActivity()
+  }
+}
+
+analytics.DownloadRecord "0..*" --> "1" versioning.DataPackageVersion : forVersion >
+analytics.MetricsService "1" --> "0..*" analytics.DownloadRecord : aggregates >
+
+' ========= NOTIFICATIONS =========
+package "notifications" {
+  enum Channel {
+    EMAIL
+    WEBHOOK
+  }
+
+  class ChangeEvent {
+    + id: UUID
+    + packageId: UUID
+    + type: String
+    + occurredAt: DateTime
+    + details: String
+  }
+
+  class NotificationSubscription {
+    + id: UUID
+    + userId: UUID
+    + packageId: UUID
+    + channels: List<Channel>
+    + createdAt: DateTime
+    + active: boolean
+  }
+
+  class NotificationService {
+    + NotificationSubscription subscribe(userId: UUID, packageId: UUID, channels: List<Channel>)
+    + void notifyChange(event: ChangeEvent)
+  }
+}
+
+User "1" -- "0..*" notifications.NotificationSubscription : subscribes >
+catalog.DataPackage "1" -- "0..*" notifications.NotificationSubscription : hasSubscribers >
+notifications.NotificationService "1" --> "0..*" notifications.NotificationSubscription : manages >
+notifications.NotificationService "1" --> "0..*" notifications.ChangeEvent : emits >
+
+' ========= BILLING =========
+package "billing" {
+  enum BillingStatus {
+    ACTIVE
+    CANCELED
+    PAST_DUE
+  }
+
+  class PricingPlan {
+    + id: UUID
+    + name: String
+    + monthlyPrice: BigDecimal
+    + privatePackageLimit: int
+    + memberLimit: int
+  }
+
+  class BillingSubscription {
+    + id: UUID
+    + orgId: UUID
+    + planId: UUID
+    + startedAt: DateTime
+    + status: BillingStatus
+    + void changePlan(planId: UUID)
+  }
+
+  class BillingService {
+    + BillingSubscription subscribe(orgId: UUID, planId: UUID)
+    + List<PricingPlan> listPlans()
+  }
+}
+
+org.PublisherOrganization "1" -- "0..1" billing.BillingSubscription : billing >
+billing.BillingSubscription "1" --> "1" billing.PricingPlan : plan >
+
+' ========= ADMIN =========
+package "admin" {
+  class Config {
+    + id: UUID
+    + siteTitle: String
+    + supportEmail: String
+  }
+
+  class MetricSnapshot {
+    + at: DateTime
+    + users: int
+    + downloads: int
+    + apiCalls: int
+  }
+
+  class AdminService {
+    + org.Invitation inviteUserToPlatform(email: String, invitedBy: UUID)
+    + void setConfig(config: Config)
+    + MetricSnapshot getMetrics()
+  }
+}
+
+AdminService "1" --> "1" Config
+AdminService "1" --> "0..*" MetricSnapshot : reports >
+
+' ========= CROSS-PACKAGE USAGE =========
+catalog.DataBundle "1" --> "1" versioning.DataPackageVersion : buildsFrom >
+validation.Validator "1" --> "0..*" versioning.DataPackageVersion : validatesOnPublish >
+publishing.PublishingService "1" ..> versioning.VersionService : uses
+publishing.PublishingService "1" ..> storage.CacheService : cachesResources
+publishing.PublishingService "1" ..> notifications.NotificationService : notifies
+search.SearchService "1" ..> analytics.MetricsService : ranksByPopularity
+
+@enduml

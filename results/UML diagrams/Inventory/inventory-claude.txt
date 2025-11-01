@@ -1,0 +1,245 @@
+@startuml
+
+package "user" {
+    abstract User {
+        + userId: String
+        + username: String
+        + password: String
+        + email: String
+        + isAuthorized: Boolean
+        + authenticate(username: String, password: String): Boolean
+        + receiveNotification(message: String): void
+    }
+    
+    class AdministrativeUser {
+        + departmentId: String
+        + adminLevel: AdminLevel
+        + workingComputer: String
+        + delegateAuthority(targetUser: User, actions: List<String>): void
+        + approveRequest(requestId: String): Boolean
+        + viewPendingRequests(): List<Request>
+    }
+    
+    class FacultyUser {
+        + facultyId: String
+        + addDepartmentInventory(departmentId: String): void
+        + approveInterFacultyTransfer(requestId: String): Boolean
+    }
+    
+    class DAUser {
+        + departmentId: String
+        + updateDatabaseDirectly(assetId: String): void
+        + approveInterDepartmentRequest(requestId: String): Boolean
+    }
+    
+    class InventoryUser {
+        + departmentId: String
+        + checkReturnedAsset(assetId: String): void
+        + updateInventoryOnReturn(assetId: String): void
+        + addAssetToDepartment(asset: Asset): void
+    }
+    
+    class ITUser {
+        + createSpace(spaceDetails: SpaceDetails): Space
+        + modifyFloorStructure(floorId: String, structure: FloorStructure): void
+        + handleExceptionRequest(requestId: String): void
+    }
+    
+    class UniversityUser {
+        + universityId: String
+        + addAllAssets(): void
+        + approveExternalTransfer(requestId: String): Boolean
+    }
+    
+    enum AdminLevel {
+        DEPARTMENT
+        FACULTY
+        UNIVERSITY
+    }
+    
+    User <|-- AdministrativeUser
+    User <|-- FacultyUser
+    User <|-- DAUser
+    User <|-- InventoryUser
+    User <|-- ITUser
+    User <|-- UniversityUser
+}
+
+package "asset" {
+    class Asset {
+        + assetId: String
+        + name: String
+        + description: String
+        + value: Double
+        + departmentId: String
+        + location: String
+        + status: AssetStatus
+        + createdDate: Date
+        + lastModifiedDate: Date
+        + modifyAsset(field: String, value: String): Boolean
+        + validateModification(field: String): Boolean
+    }
+    
+    class BulkEntry {
+        + bulkId: String
+        + filename: String
+        + uploadDate: Date
+        + processedCount: Integer
+        + errorCount: Integer
+        + processFile(): List<Asset>
+        + validateEntries(): List<ValidationError>
+    }
+    
+    enum AssetStatus {
+        AVAILABLE
+        IN_USE
+        TRANSFERRED
+        MAINTENANCE
+    }
+}
+
+package "organization" {
+    class Department {
+        + departmentId: String
+        + name: String
+        + facultyId: String
+        + getAssets(): List<Asset>
+        + addAsset(asset: Asset): void
+    }
+    
+    class Faculty {
+        + facultyId: String
+        + name: String
+        + universityId: String
+        + getDepartments(): List<Department>
+        + getAllAssets(): List<Asset>
+    }
+    
+    class University {
+        + universityId: String
+        + name: String
+        + getFaculties(): List<Faculty>
+        + getAllAssets(): List<Asset>
+    }
+    
+    class Space {
+        + spaceId: String
+        + name: String
+        + floorId: String
+        + capacity: Integer
+        + isAvailable: Boolean
+    }
+    
+    class Floor {
+        + floorId: String
+        + buildingId: String
+        + level: Integer
+        + structure: FloorStructure
+        + modifyStructure(newStructure: FloorStructure): void
+    }
+}
+
+package "request" {
+    class Request {
+        + requestId: String
+        + requesterId: String
+        + assetId: String
+        + requestType: RequestType
+        + sourceLocation: String
+        + targetLocation: String
+        + status: RequestStatus
+        + createdDate: Date
+        + approvalDate: Date
+        + priority: Priority
+        + submitRequest(): void
+        + approve(approverId: String): void
+        + reject(approverId: String, reason: String): void
+        + execute(): void
+    }
+    
+    class Approval {
+        + approvalId: String
+        + requestId: String
+        + approverId: String
+        + approvalLevel: AdminLevel
+        + approvalDate: Date
+        + comments: String
+        + processApproval(): Boolean
+    }
+    
+    class Notification {
+        + notificationId: String
+        + userId: String
+        + requestId: String
+        + message: String
+        + sentDate: Date
+        + isRead: Boolean
+        + send(): void
+        + markAsRead(): void
+    }
+    
+    enum RequestType {
+        INTRA_DEPARTMENT
+        INTER_DEPARTMENT
+        INTER_FACULTY
+        EXTERNAL_TRANSFER
+        ASSET_MODIFICATION
+        EXCEPTION_REQUEST
+    }
+    
+    enum RequestStatus {
+        PENDING
+        APPROVED
+        REJECTED
+        IN_EXECUTION
+        COMPLETED
+    }
+    
+    enum Priority {
+        LOW
+        MEDIUM
+        HIGH
+        URGENT
+    }
+}
+
+package "delegation" {
+    class Delegation {
+        + delegationId: String
+        + delegatorId: String
+        + delegateeId: String
+        + authorizedActions: List<String>
+        + isActive: Boolean
+        + createdDate: Date
+        + expiryDate: Date
+        + activateDelegation(): void
+        + revokeDelegation(): void
+    }
+    
+    class InventoryAdministrator {
+        + delegationId: String
+        + originalRole: String
+        + acquiredPermissions: List<String>
+        + executeAuthorizedAction(action: String): Boolean
+    }
+}
+
+' Relationships
+University "1" -- "1..*" Faculty : contains
+Faculty "1" -- "1..*" Department : contains
+Department "1" -- "0..*" Asset : owns
+Department "1" -- "0..*" Space : has
+
+User "1" -- "0..*" Request : creates
+Request "1" -- "1..*" Approval : requires
+Request "1" -- "0..*" Notification : generates
+Asset "1" -- "0..*" Request : involves
+
+AdministrativeUser "1" -- "0..*" Delegation : creates
+Delegation "1" -- "1" InventoryAdministrator : creates
+
+BulkEntry "1" -- "0..*" Asset : generates
+
+Floor "1" -- "0..*" Space : contains
+
+@enduml

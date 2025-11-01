@@ -1,0 +1,151 @@
+@startuml
+!theme plain
+
+package "user" {
+    abstract class User {
+        +String username
+        +String password
+        +boolean isAuthenticated()
+    }
+
+    class RegularUser extends User {
+    }
+
+    class FacultyMember extends RegularUser {
+        +addDepartmentsInventory(department: Department)
+    }
+
+    class AdministrativeUser extends RegularUser {
+        +approveRequest(request: Request)
+        +delegateAuthority(delegate: User, permissions: String[])
+    }
+
+    class InventoryUser extends RegularUser {
+        +checkAndReceiveAsset(asset: Asset)
+        +updateInventory(asset: Asset)
+    }
+
+    class DAUser extends AdministrativeUser {
+    }
+
+    class ITUser extends AdministrativeUser {
+        +createNewSpace(spaceDetails: String)
+        +modifyFloorStructure(floor: Floor, structure: String)
+    }
+
+    class UniversityUser extends AdministrativeUser {
+        +addAssetsToInventory(assets: Asset[])
+    }
+
+    class GroupMember extends User {
+    }
+
+    class DAGroupMember extends GroupMember {
+    }
+
+    class FacultyGroupMember extends GroupMember {
+    }
+
+    class UniversityGroupMember extends GroupMember {
+    }
+
+    class ITGroupMember extends GroupMember {
+    }
+
+    note left of DAUser : Represents DA group members.
+}
+
+package "asset" {
+    class Asset {
+        -String id
+        +String name
+        +String description
+        +String serialNumber
+        +String status
+        +editAsset(fields: Map<String, String>)
+    }
+
+    class Inventory {
+        -Asset[] assets
+        +addAsset(asset: Asset)
+        +updateAsset(asset: Asset)
+    }
+}
+
+package "request" {
+    class Request {
+        -String requestId
+        -User requester
+        -String type
+        -RequestStatus status
+        -String notificationEmail
+        +submit()
+        +isPending()
+        +notifyUserByEmail()
+    }
+
+    enum RequestStatus {
+        PENDING
+        APPROVED
+        DENIED
+        EXECUTED
+    }
+
+    class TransferRequest extends Request {
+        +String fromDepartment
+        +String toDepartment
+        +approve(approver: User)
+    }
+}
+
+package "organization" {
+    class Department {
+        +String name
+        +Inventory inventory
+        +updateDatabaseDirectly(data: Map<String, String>)
+    }
+
+    class Faculty {
+        +String name
+    }
+
+    class University {
+        +String name
+    }
+
+    class Floor {
+        +String structure
+    }
+}
+
+package "system" {
+    class AuthorizationSystem {
+        -Map<User, String[]> permissions
+        +isAuthorized(user: User, action: String): boolean
+    }
+}
+
+Department "1" -- "1" Faculty: "is part of"
+University "1" -- "1..*" Faculty: "contains"
+Department "1" -- "1" Inventory: "owns"
+FacultyMember "1" -- "0..*" Department: "can add inventory to"
+User "1" -- "0..*" Request: "makes"
+Request "1" -- "0..*" AdministrativeUser: "approved by"
+User "1" -- "1" AuthorizationSystem: "uses"
+ITUser "1" -- "0..*" Floor: "modifies"
+AdministrativeUser "1" -- "0..*" AdministrativeUser: "delegates authority to"
+
+Asset "0..*" -- "1" Department: "belongs to"
+Request "1" -- "1..*" Asset: "involves"
+InventoryUser "1" -- "1" Inventory: "updates"
+UniversityUser "1" -- "1" Inventory: "updates"
+ITUser "1" -- "0..*" Floor: "modifies structure of"
+AdministrativeUser "1" -- "0..*" AdministrativeUser: "can be delegated by"
+User "1" -- "1" AuthenticationSystem: "authenticates with"
+AuthenticationSystem "1" -- "1..*" User: "validates"
+
+class AuthenticationSystem {
+    +authenticate(username: String, password: String): boolean
+}
+
+@enduml

@@ -1,0 +1,100 @@
+@startuml
+package "control" {
+    class Autopilot {
+        -isEngaged: boolean
+        -activeMode: FlightMode
+        +engage(): void
+        +disengage(): void
+        +setActiveMode(mode: FlightMode): void
+        +getActiveMode(): FlightMode
+        +isEngaged(): boolean
+        +update(): void
+    }
+    
+    abstract class FlightMode {
+        #isActive: boolean
+        +activate(): void
+        +deactivate(): void
+        +isActive(): boolean
+        +abstract computeCommand(): double
+        +abstract update(): void
+    }
+    
+    class RollHoldMode {
+        -rollReference: double
+        -maxRollAngle: double
+        -maxRollRate: double
+        -trackingTolerance: double
+        -overshootLimit: double
+        -bandwidth: double
+        +setRollReference(angle: double): void
+        +getRollReference(): double
+        +computeCommand(): double
+        +update(): void
+        -applyRollLimits(angle: double): double
+    }
+    
+    class HeadingHoldMode {
+        -headingReference: double
+        +setHeadingReference(heading: double): void
+        +getHeadingReference(): double
+        +computeCommand(): double
+        +update(): void
+    }
+}
+
+package "aircraft" {
+    class Aircraft {
+        -rollAngle: double
+        -heading: double
+        -rollRate: double
+        +getRollAngle(): double
+        +getHeading(): double
+        +getRollRate(): double
+        +update(): void
+    }
+    
+    class RollActuator {
+        -command: double
+        -maxAileronCommand: double
+        +setCommand(cmd: double): void
+        +getCommand(): double
+        +execute(): void
+        -limitCommand(cmd: double): double
+    }
+}
+
+package "cockpit" {
+    class CockpitControls {
+        -autopilotSwitch: boolean
+        -headingSwitch: boolean
+        -turnKnobCommand: double
+        -headingKnobCommand: double
+        +isAutopilotEngaged(): boolean
+        +isHeadingModeSelected(): boolean
+        +getTurnKnobCommand(): double
+        +getHeadingKnobCommand(): double
+        +update(): void
+    }
+}
+
+package "modes" {
+    enum ModeType {
+        ROLL_HOLD
+        HEADING_HOLD
+        NONE
+    }
+}
+
+' Relationships
+Autopilot --> "1" Aircraft : monitors
+Autopilot --> "1" CockpitControls : reads
+Autopilot --> "1" RollActuator : commands
+Autopilot --> "0..*" FlightMode : manages
+RollHoldMode --|> FlightMode
+HeadingHoldMode --|> FlightMode
+RollHoldMode --> "1" Aircraft : reads state
+HeadingHoldMode --> "1" Aircraft : reads state
+FlightMode --> "1" RollActuator : outputs to
+Autopilot --> "1" ModeType : tracks active mode
+@enduml

@@ -1,0 +1,284 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "org" {
+  abstract class OrganizationUnit {
+    -id: String {readOnly}
+    +name: String
+  }
+
+  class University extends OrganizationUnit
+  class Faculty extends OrganizationUnit
+  class Department extends OrganizationUnit
+
+  University "1" o-- "1..*" Faculty : comprises
+  Faculty "1" o-- "1..*" Department : contains
+}
+
+package "inventory" {
+  enum AssetStatus {
+    IN_STOCK
+    PENDING_TRANSFER
+    WAITING_RECEIPT
+    TRANSFERRED
+    RETURNED
+    RETIRED
+  }
+
+  class Asset {
+    -assetId: String {readOnly}
+    +name: String
+    +category: String
+    +status: AssetStatus
+    +location: String
+    +serialNumber: String
+    +ownerDepartment: Department
+    +edit(fields: Map<String,String>): void
+    +lockIds(): void
+  }
+
+  class Inventory {
+    +unit: OrganizationUnit
+    +assets: List<Asset>
+    +addAsset(a: Asset): void
+    +updateAsset(a: Asset): void
+    +updateDirect(u: User, a: Asset): boolean
+    +updateOnReceipt(a: Asset): void
+    +bulkAdd(file: BulkEntryFile): List<Asset>
+    +findAssetsByDept(d: Department): List<Asset>
+  }
+
+  class BulkEntryFile {
+    +fileName: String
+    +rows: Integer
+  }
+
+  class BulkImporter {
+    +importAssets(file: BulkEntryFile, owner: OrganizationUnit): List<Asset>
+  }
+
+  class Space {
+    +spaceId: String
+    +name: String
+    +floor: Integer
+    +capacity: Integer
+  }
+
+  class FloorStructure {
+    +building: String
+    +floors: Integer
+    +layoutVersion: String
+    +modifyLayout(details: String): void
+  }
+
+  Department "1" *-- "0..*" Asset : owns
+  Space "0..*" -- "1" Department : allocated to
+  FloorStructure "1" -- "1" University : building of
+  Inventory "1" -- "1" OrganizationUnit : scope
+  Inventory "1" -- "0..*" Asset : manages
+  BulkImporter "1" -- "1" BulkEntryFile : reads
+  BulkImporter "1" --> "1" Inventory : populates
+}
+
+package "requests" {
+  enum RequestType {
+    INTRA_DEPARTMENT_UPDATE
+    INTER_DEPARTMENT_TRANSFER
+    INTER_FACULTY_TRANSFER
+    EXTERNAL_TRANSFER
+    EXCEPTION_REQUEST
+  }
+
+  enum RequestStatus {
+    DRAFT
+    PENDING_APPROVAL
+    APPROVED
+    REJECTED
+    WAITING_EXECUTION
+    EXECUTED
+  }
+
+  enum ApprovalLevel {
+    DEPARTMENT
+    FACULTY
+    UNIVERSITY
+  }
+
+  enum GroupType {
+    DA
+    FACULTY
+    UNIVERSITY
+    INVENTORY
+    IT
+  }
+
+  class Request {
+    +requestId: String
+    +type: RequestType
+    +requester: User
+    +origin: OrganizationUnit
+    +destination: OrganizationUnit
+    +asset: Asset
+    +status: RequestStatus
+    +createdAt: Date
+    +submit(): void
+    +markWaitingExecution(queue: ExecutionQueue): void
+    +notifyUser(service: EmailService): void
+  }
+
+  class Approval {
+    +approved: boolean
+    +decider: User
+    +group: Group
+    +comment: String
+    +decidedAt: Date
+  }
+
+  interface ApprovalPolicy {
+    +requiredGroups(r: Request): List<GroupType>
+    +canDirectUpdate(u: User, r: Request): boolean
+  }
+
+  class DefaultApprovalPolicy
+
+  class ExecutionQueue {
+    +pending: List<Request>
+    +enqueue(r: Request): void
+    +dequeue(): Request
+  }
+
+  class EmailService {
+    +sendEmail(to: String, subject: String, body: String): void
+  }
+
+  Request "1" *-- "0..*" Approval : has
+  Request --> "1" EmailService : uses
+  Request --> "1" ApprovalPolicy : consults
+  ExecutionQueue "1" *-- "0..*" Request : waiting
+  DefaultApprovalPolicy ..|> ApprovalPolicy
+}
+
+package "actors" {
+  interface Approver {
+    +approve(r: Request): Approval
+    +listPending(level: ApprovalLevel): List<Request>
+  }
+
+  interface InventoryAdministrator {
+    +manageInventory(inv: Inventory): void
+  }
+
+  abstract class User {
+    +userId: String
+    +username: String
+    -password: String
+    +email: String
+    +authorized: boolean
+    +createRequest(asset: Asset, origin: OrganizationUnit, dest: OrganizationUnit, type: RequestType): Request
+    +canEdit(asset: Asset): boolean
+    +receiveNotification(msg: String): void
+  }
+
+  class AdministrativeUser extends User {
+    +delegate(to: User, actions: List<ActionType>, start: Date, end: Date): Delegation
+  }
+
+  class InventoryUser extends User {
+    +editAsset(asset: Asset, changes: Map<String,String>): void
+    +checkReturnedAsset(asset: Asset): void
+  }
+
+  class FacultyUser extends User {
+    +faculty: Faculty
+    +addAssetToDepartment(d: Department, a: Asset): void
+  }
+
+  class UniversityUser extends User {
+    +addAsset(a: Asset, d: Department): void
+  }
+
+  class ITMember extends User {
+    +createSpace(d: Department, name: String, floor: Integer, capacity: Integer): Space
+    +modifyFloorStructure(fs: FloorStructure, details: String): void
+    +processException(r: Request): void
+  }
+
+  abstract class Group {
+    +name: String
+    +type: GroupType
+  }
+
+  class DAGroup extends Group
+  class FacultyGroup extends Group
+  class UniversityGroup extends Group
+  class InventoryGroup extends Group
+  class ITGroup extends Group
+
+  AdministrativeUser ..|> Approver
+  InventoryUser ..|> Approver
+  FacultyUser ..|> Approver
+  UniversityUser ..|> Approver
+
+  AdministrativeUser ..|> InventoryAdministrator
+  InventoryUser ..|> InventoryAdministrator
+
+  Group "1" -- "0..*" User : members
+  DAGroup "1" -- "1" Department : oversees
+  FacultyGroup "1" -- "1" Faculty : oversees
+  UniversityGroup "1" -- "1" University : oversees
+  InventoryGroup "1" -- "1" Department : operates
+  ITGroup "1" -- "1" University : supports
+}
+
+package "delegation" {
+  enum ActionType {
+    EDIT_ASSET
+    APPROVE_REQUEST
+    MANAGE_INVENTORY
+    CREATE_SPACE
+    MODIFY_FLOOR
+  }
+
+  class Delegation {
+    +delegator: AdministrativeUser
+    +delegatee: User
+    +actions: List<ActionType>
+    +start: Date
+    +end: Date
+    +grant(): void
+    +revoke(): void
+  }
+
+  Delegation --> InventoryAdministrator : grants role
+  AdministrativeUser "1" -- "0..*" Delegation : issues >
+  Delegation "1" -- "1" User : assignee
+}
+
+package "security" {
+  class AuthenticationService {
+    +authenticate(u: String, p: String): boolean
+  }
+
+  AuthenticationService "1" --> "0..*" User : authenticates
+}
+
+package "devices" {
+  class AdminComputer {
+    +hostname: String
+    +os: String
+  }
+
+  AdministrativeUser "0..*" --> "1..*" AdminComputer : works on
+}
+
+' --- Cross-package behavior links (labels & multiplicities for key flows) ---
+User "1" --> "0..*" Request : creates
+Request "1" --> "1" ExecutionQueue : enqueues when WAITING_EXECUTION
+EmailService "1" --> "0..*" User : notifies (treated)
+
+' Policies capturing approvals per requirements:
+' - Intra-department updates can be direct (no Request) if canDirectUpdate==true.
+' - Inter-department: DA + Faculty approvals unless requester from higher level group.
+' - Inter-faculty: Faculty approval or higher.
+' - External transfer: University approval.
+@enduml

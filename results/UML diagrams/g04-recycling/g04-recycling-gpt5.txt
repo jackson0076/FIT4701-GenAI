@@ -1,0 +1,509 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "model" {
+
+	interface Locatable {
+		+getCoordinates(): GeoPoint
+		+getAddress(): Address
+	}
+
+	class GeoPoint {
+		+latitude: double
+		+longitude: double
+	}
+
+	enum DayOfWeek {
+		MONDAY
+		TUESDAY
+		WEDNESDAY
+		THURSDAY
+		FRIDAY
+		SATURDAY
+		SUNDAY
+	}
+
+	enum WasteType {
+		PAPER
+		PLASTIC
+		GLASS
+		METAL
+		ELECTRONICS
+		ORGANIC
+		SPECIAL
+	}
+
+	class Address {
+		+street: String
+		+city: String
+		+state: String
+		+zip: String
+		+country: String
+		+toGoogleMapsUrl(): String
+	}
+
+	class OpeningHour {
+		+day: DayOfWeek
+		+openTime: String
+		+closeTime: String
+		+isOpen(at: String): boolean
+	}
+
+	abstract class Facility {
+		+id: String
+		+name: String
+		+ecoFriendly: boolean
+		+rating: double
+		-address: Address
+		-hours: List<OpeningHour>
+		-accepted: Set<WasteType>
+		+accepts(t: WasteType): boolean
+		+isOpen(at: String): boolean
+		+getMapUrl(): String
+		+getCoordinates(): GeoPoint
+		+getAddress(): Address
+	}
+
+	class RecyclingFacility
+	class DonationCenter
+	class DropOffSite
+
+	class RecyclingBin {
+		+id: String
+		-address: Address
+		+getCoordinates(): GeoPoint
+		+getAddress(): Address
+	}
+
+	class SafeDisposalEvent {
+		+id: String
+		+name: String
+		+start: String
+		+end: String
+		-location: Address
+		+getCoordinates(): GeoPoint
+		+getAddress(): Address
+	}
+
+	abstract class User {
+		+id: String
+		+name: String
+		+email: String
+		+lastLogin: String
+		+authenticate(passwordHash: String): boolean
+	}
+
+	class GuestUser {
+		+canBrowsePublic(): boolean
+	}
+
+	class RegisteredUser {
+		-favorites: Set<Facility>
+		-schedule: Schedule
+		-subscription: NotificationSubscription
+		+addFavorite(f: Facility): void
+		+removeFavorite(f: Facility): void
+		+linkEmail(email: String): void
+		+requestPasswordReset(): void
+		+getRecommendations(): List<Facility>
+	}
+
+	class Admin {
+		+addFacility(f: Facility): void
+		+removeFacility(f: Facility): void
+		+readFeedback(): List<Feedback>
+		+blockIP(ip: String): boolean
+		+viewDashboard(): Dashboard
+		+viewErrorLogs(): List<LogEntry>
+		+communicateWithFacility(f: Facility, message: String): void
+	}
+
+	class Executive {
+		+viewCompanyData(): Report
+	}
+
+	class Employee {
+		+employeeId: String
+		+getRoutePlanForDate(date: String): RoutePlan
+		+receiveNotification(msg: String): void
+	}
+
+	class HRStaff {
+		+accessEmployeeRecords(): List<EmployeeProfile>
+	}
+
+	class Accountant {
+		+viewActivityFees(): List<Fee>
+		+createBillStatement(fees: List<Fee>): BillStatement
+	}
+
+	class Developer {
+		+apiKey: String
+		+requestApiKey(): String
+		+attendLesson(lessonId: String): void
+	}
+
+	class FacilityRepresentative {
+		+managedFacilityId: String
+		+updateFacilityInfo(info: String): void
+		+updateAcceptedMaterials(types: Set<WasteType>): void
+		+viewUserStats(): List<UsageStat>
+		+replyToQuestion(q: Question, answer: String): void
+		+viewSchedules(): List<Schedule>
+	}
+
+	class SuperUser {
+		+overrideFacilityUpdate(info: String): void
+	}
+
+	class Schedule {
+		+id: String
+		-slots: List<AvailabilitySlot>
+		+addSlot(slot: AvailabilitySlot): void
+	}
+
+	class AvailabilitySlot {
+		+day: DayOfWeek
+		+start: String
+		+end: String
+	}
+
+	class PickupRequest {
+		+id: String
+		+preferredStart: String
+		+preferredEnd: String
+		+status: String
+	}
+
+	class NotificationSubscription {
+		+email: String
+		+subscribedToEvents: boolean
+		+frequency: NotificationFrequency
+	}
+
+	enum NotificationFrequency {
+		IMMEDIATE
+		DAILY
+		WEEKLY
+	}
+
+	class RoutePlan {
+		+id: String
+		+waypoints: List<Facility>
+		+totalDistanceKm: double
+		+suggestedMinutes: int
+		+optimize(): void
+	}
+
+	class Feedback {
+		+id: String
+		+message: String
+		+type: FeedbackType
+		+createdAt: String
+		+markAddressed(): void
+	}
+
+	enum FeedbackType {
+		SUGGESTION
+		COMPLAINT
+		QUESTION
+		BUG
+	}
+
+	class LogEntry {
+		+id: String
+		+level: LogLevel
+		+message: String
+		+timestamp: String
+	}
+
+	enum LogLevel {
+		INFO
+		WARN
+		ERROR
+	}
+
+	class Transaction {
+		+id: String
+		+type: TransactionType
+		+timestamp: String
+		+pointsDelta: int
+		+notes: String
+	}
+
+	enum TransactionType {
+		DROP_OFF
+		PICKUP
+		DONATION
+		PURCHASE
+	}
+
+	class PointsAccount {
+		+balance: int
+		+add(points: int): void
+		+redeem(points: int): boolean
+	}
+
+	class Reward {
+		+id: String
+		+name: String
+		+pointsRequired: int
+		+expiresOn: String
+	}
+
+	class RewardProgram {
+		+id: String
+		+enroll(u: RegisteredUser): PointsAccount
+		+getAvailableRewards(): List<Reward>
+	}
+
+	class Fee {
+		+id: String
+		+description: String
+		+amount: Decimal
+	}
+
+	class BillStatement {
+		+id: String
+		-fees: List<Fee>
+		+total(): Decimal
+	}
+
+	class Document {
+		+id: String
+		+title: String
+		+url: String
+		+getPreview(): String
+	}
+
+	class Question {
+		+id: String
+		+fromUserEmail: String
+		+content: String
+		+createdAt: String
+	}
+
+	class EmployeeProfile {
+		+employeeId: String
+		+fullName: String
+		+role: String
+		+email: String
+	}
+
+	class UsageStat {
+		+date: String
+		+dropOffCount: int
+		+activeUsers: int
+		+locationsCovered: int
+	}
+
+	class Report {
+		+title: String
+		+generatedAt: String
+	}
+
+	class Dashboard {
+		+title: String
+	}
+
+	Facility ..|> Locatable
+	RecyclingBin ..|> Locatable
+	SafeDisposalEvent ..|> Locatable
+
+	RecyclingFacility --|> Facility
+	DonationCenter --|> Facility
+	DropOffSite --|> Facility
+
+	GuestUser --|> User
+	RegisteredUser --|> User
+	Admin --|> RegisteredUser
+	Executive --|> RegisteredUser
+	Employee --|> RegisteredUser
+	HRStaff --|> Employee
+	Accountant --|> Employee
+	Developer --|> RegisteredUser
+	FacilityRepresentative --|> RegisteredUser
+	SuperUser --|> FacilityRepresentative
+
+	Facility "1" -- "1" Address : located at
+	Facility "1" -- "1..*" OpeningHour : has hours
+	Facility "0..*" o-- "0..*" SafeDisposalEvent : hosts
+	RecyclingBin "1" -- "1" Address : at
+	SafeDisposalEvent "1" -- "1" Address : at
+
+	RegisteredUser "1" -- "0..*" Facility : favorites
+	RegisteredUser "1" -- "0..1" Schedule : has
+	RegisteredUser "1" -- "0..1" NotificationSubscription : subscribes
+	RegisteredUser "1" -- "0..*" Transaction : history
+	RegisteredUser "0..1" -- "1" PointsAccount : points
+	RegisteredUser "0..*" -- "0..*" PickupRequest : pickup requests
+	Facility "0..*" -- "0..*" PickupRequest : serves
+
+	RoutePlan "1" -- "1..*" Facility : waypoints
+	Employee "0..*" -- "0..*" RoutePlan : uses
+	HRStaff "1" -- "0..*" EmployeeProfile : manages
+
+	RewardProgram "1" -- "0..*" Reward : offers
+	PointsAccount "1" -- "0..*" Transaction : records
+	PointsAccount "1" -- "1" RewardProgram : program
+
+	BillStatement "1" o-- "0..*" Fee : includes
+}
+
+package "service" {
+
+	class SearchService {
+		+searchByZip(zip: String, types: Set<WasteType>): List<Facility>
+		+getFacilityHours(f: Facility): List<OpeningHour>
+		+listPublicBins(zip: String): List<RecyclingBin>
+		+validateZip(zip: String): ValidationResult
+	}
+
+	class MapService {
+		+openInGoogleMaps(loc: Locatable): String
+		+buildMap(items: List<Locatable>): String
+	}
+
+	class RoutingService {
+		+planRoute(facilities: List<Facility>, schedule: Schedule): RoutePlan
+	}
+
+	class NotificationService {
+		+subscribe(user: RegisteredUser, email: String): NotificationSubscription
+		+notify(user: RegisteredUser, msg: String): boolean
+	}
+
+	class FacilityManagementService {
+		+onboard(f: Facility): void
+		+update(f: Facility): void
+		+communicate(admin: Admin, f: Facility, message: String): void
+	}
+
+	class FeedbackService {
+		+submit(from: User, msg: String, type: FeedbackType): Feedback
+		+listAll(): List<Feedback>
+	}
+
+	class LoggingService {
+		+getErrors(): List<LogEntry>
+	}
+
+	class ModerationService {
+		+blockIP(ip: String, reason: String, until: String): boolean
+		+isBlocked(ip: String): boolean
+	}
+
+	class DashboardService {
+		+getUsageStats(from: String, to: String): List<UsageStat>
+	}
+
+	class EventService {
+		+listEvents(zip: String): List<SafeDisposalEvent>
+	}
+
+	class DocumentationService {
+		+getUserDocs(): List<Document>
+	}
+
+	class RewardService {
+		+awardPoints(u: RegisteredUser, points: int): Transaction
+		+redeem(u: RegisteredUser, r: Reward): boolean
+	}
+
+	class BillingService {
+		+listActivityFees(): List<Fee>
+		+createBillStatement(fees: List<Fee>): BillStatement
+	}
+
+	class APIAccessService {
+		+issueApiKey(dev: Developer): String
+	}
+
+	class ValidationResult {
+		+valid: boolean
+		+message: String
+	}
+
+	SearchService --> "0..*" Facility : returns
+	SearchService --> ValidationResult
+	MapService <-- "1" : used by UI
+	RoutingService --> RoutePlan
+	NotificationService --> NotificationSubscription
+	FacilityManagementService --> Facility
+	FeedbackService --> Feedback
+	LoggingService --> LogEntry
+	ModerationService --> "0..*" IPBlock
+	DashboardService --> "0..*" UsageStat
+	EventService --> "0..*" SafeDisposalEvent
+	DocumentationService --> "0..*" Document
+	RewardService --> Transaction
+	BillingService --> BillStatement
+	APIAccessService --> Developer
+}
+
+package "security" {
+
+	class IPBlock {
+		+ip: String
+		+reason: String
+		+blockedUntil: String
+	}
+
+	class SecurityPolicy {
+		+encryptionEnabled: boolean
+		+encryptionStandard: String
+	}
+
+	class AuditLog {
+		+id: String
+		+action: String
+		+actorId: String
+		+timestamp: String
+	}
+
+}
+
+package "gui" {
+
+	class MapView {
+		+display(items: List<Locatable>): void
+		+openAddressInNewTab(addr: Address): void
+	}
+
+	class SearchView {
+		+enterZip(zip: String): void
+		+selectTypes(types: Set<WasteType>): void
+		+showFacilities(list: List<Facility>): void
+		+showValidationError(msg: String): void
+	}
+
+	class DashboardView {
+		+render(stats: List<UsageStat>): void
+	}
+
+	class DocumentationViewer {
+		+open(doc: Document): void
+	}
+
+	MapView --> "1" MapService
+	SearchView --> "1" SearchService
+	DashboardView --> "1" DashboardService
+	DocumentationViewer --> "1" DocumentationService
+
+	MapView --> "0..*" Locatable : displays
+}
+
+' Cross-package usage relationships
+RegisteredUser --> "1" RewardProgram : enrolled in
+RegisteredUser --> "1" NotificationService : uses
+Employee --> "1" RoutingService : requests route
+Admin --> "1" ModerationService : uses
+Admin --> "1" LoggingService : views
+Admin --> "1" FacilityManagementService : manages facilities
+Admin --> "1" DashboardService : monitors
+Executive --> "1" DashboardService : reviews
+Accountant --> "1" BillingService : prepares bills
+Developer --> "1" APIAccessService : obtains key
+FacilityRepresentative "1" -- "1" Facility : manages
+
+@enduml

@@ -1,0 +1,96 @@
+
+@startuml
+
+package "core" {
+  interface Device{
+    +void setClock(Date)
+    +void newPatient()
+    +void quit()
+    +void setTempPacing()
+  }
+
+  abstract class PacingDevice {
+    +BradycardiaParametersReport()
+    +TemporaryParametersReport()
+    +ImplantDataReport()
+    +ThresholdTestResultsReport()
+    +MeasuredDataReport()
+    +MarkerLegendReport()
+    +SessionNetChangeReport()
+    +FinalReport()
+    +RateHistogramReport()
+    +TrendingReport()
+    +RealTimeData[] realTimeTraces
+    -bool batteryStatus
+    -Report[] reports
+    -int deviceModel
+  }
+
+  class DCM extends PacingDevice{
+    +void displayRealTimeData()
+    +void printRealTimeData()
+    +void packetCommunicateWithPulseGenerator()
+    +void powerOnReset()
+    +void magnetMode()
+    +void storeDeviceParameters()
+  }
+
+  class UserInterface {
+    -PacingDevice device
+    +void displayUserInput()
+    +void processUserInput()
+  }
+}
+
+package "diagnostics" {
+  abstract class Reports {
+    +void display()
+  }
+
+  class BradycardiaParametersReport extends Reports
+  class TemporaryParametersReport extends Reports
+  class ImplantDataReport extends Reports
+  class ThresholdTestResultsReport extends Reports
+  class MeasuredDataReport extends Reports
+  class MarkerLegendReport extends Reports
+  class SessionNetChangeReport extends Reports
+  class FinalReport extends Reports
+  class RateHistogramReport extends Reports
+  class TrendingReport extends Reports
+}
+
+package "communication" {
+  interface TelemetryManager {
+    +void sendPacket()
+    +void receivePacket()
+  }
+
+  abstract class LeadSystem {
+    +void communicateWithPulseGenerator()
+  }
+
+  class AtrialLead extends LeadSystem
+  class VentricularLead extends LeadSystem
+}
+
+package "hardware" {
+  class PulseGenerator {
+    +void emitPulse()
+    +void stopPulse()
+  }
+}
+
+package "constraint" {
+  class BatteryStatus {
+    +bool batteryLevel
+    +void checkBatteryStatus()
+  }
+}
+
+PacingDevice --|> DCM
+DCM <-* PacingDevice
+UserInterface --|> PacingDevice
+DCM -- "0..*" Reports
+Reports -- "1..*" DCM
+UserInterface --> PacingDevice
+@enduml

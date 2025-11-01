@@ -1,0 +1,362 @@
+@startuml
+' =======================
+' Packages and Class Model
+' =======================
+
+package "common" {
+  interface Notifiable {
+    +notify(notification: Notification): void
+  }
+
+  enum Position {
+    MANAGER
+    COUNSELOR
+    NURSE
+    COACH
+    MAINTENANCE
+    VOLUNTEER
+  }
+
+  enum CamperStatus {
+    ACTIVE
+    SUSPENDED
+    WITHDRAWN
+  }
+
+  enum SubmissionStatus {
+    PENDING
+    SUBMITTED
+    APPROVED
+    REJECTED
+  }
+
+  enum AttendanceStatus {
+    PRESENT
+    ABSENT
+    LATE
+    EXCUSED
+  }
+
+  enum PaymentStatus {
+    PENDING
+    PAID
+    OVERDUE
+    REFUNDED
+  }
+
+  enum CompletionStatus {
+    ASSIGNED
+    IN_PROGRESS
+    COMPLETED
+  }
+
+  enum RegistrationType {
+    CAMPER
+    STAFF
+  }
+
+  enum EnrollmentStatus {
+    PENDING
+    ADMITTED
+    REJECTED
+    WITHDRAWN
+  }
+
+  class Money {
+    +amount: BigDecimal
+    +currency: String
+  }
+
+  class Notification {
+    +id: UUID
+    +title: String
+    +body: String
+    +sentAt: LocalDateTime
+  }
+}
+
+package "people" {
+  abstract class User {
+    +id: UUID
+    +name: String
+    +email: String
+    +phone: String
+    +createdAt: LocalDateTime
+  }
+
+  class Admin
+  class Parent
+  class Staff {
+    +position: Position
+    +active: boolean
+  }
+  class Counselor
+
+  class Camper {
+    +id: UUID
+    +firstName: String
+    +lastName: String
+    +dateOfBirth: LocalDate
+    +status: CamperStatus
+  }
+
+  class EmergencyInfo {
+    +allergies: String
+    +medications: String
+    +physicianContact: String
+    +notes: String
+  }
+
+  class EmergencyContact {
+    +name: String
+    +relationship: String
+    +phone: String
+    +email: String
+  }
+}
+
+package "forms" {
+  abstract class FormTemplate {
+    +id: UUID
+    +title: String
+    +description: String
+    +version: int
+    +uploadedAt: LocalDateTime
+  }
+
+  class ConsentFormTemplate
+  class MedicalFormTemplate
+
+  abstract class FormSubmission {
+    +id: UUID
+    +submittedAt: LocalDateTime
+    +status: SubmissionStatus
+    +signature: String
+  }
+
+  class ConsentFormSubmission
+  class MedicalFormSubmission {
+    +details: String
+  }
+
+  class RegistrationFormTemplate {
+    +id: UUID
+    +type: RegistrationType
+    +title: String
+    +version: int
+    +createdAt: LocalDateTime
+  }
+
+  class RegistrationFormSubmission {
+    +id: UUID
+    +submittedAt: LocalDateTime
+  }
+}
+
+package "scheduling" {
+  class CampYear {
+    +year: int
+    +active: boolean
+    +startDate: LocalDate
+    +endDate: LocalDate
+  }
+
+  class Group {
+    +id: UUID
+    +name: String
+  }
+
+  class Activity {
+    +id: UUID
+    +name: String
+    +description: String
+    +start: LocalDateTime
+    +end: LocalDateTime
+    +location: String
+  }
+
+  class Facility {
+    +id: UUID
+    +name: String
+    +location: String
+    +capacity: int
+  }
+
+  class FacilityBooking {
+    +id: UUID
+    +start: LocalDateTime
+    +end: LocalDateTime
+  }
+
+  class AttendanceRecord {
+    +id: UUID
+    +date: LocalDate
+    +status: AttendanceStatus
+    +recordedAt: LocalDateTime
+  }
+
+  class Task {
+    +id: UUID
+    +title: String
+    +description: String
+    +dueAt: LocalDateTime
+  }
+
+  class TaskAssignment {
+    +assignedAt: LocalDateTime
+    +status: CompletionStatus
+  }
+
+  class CompletionReport {
+    +id: UUID
+    +content: String
+    +submittedAt: LocalDateTime
+  }
+}
+
+package "ops" {
+  class NameTag {
+    +id: UUID
+    +fullName: String
+    +groupName: String
+    +barcode: String
+    +createdAt: LocalDateTime
+  }
+
+  class Reminder {
+    +id: UUID
+    +message: String
+    +dueAt: LocalDateTime
+  }
+
+  class Rule {
+    +id: UUID
+    +text: String
+    +createdAt: LocalDateTime
+    +modifiedAt: LocalDateTime
+  }
+
+  class CamperSuspension {
+    +id: UUID
+    +startDate: LocalDate
+    +endDate: LocalDate
+    +reason: String
+  }
+
+  class StaffWarning {
+    +id: UUID
+    +reason: String
+    +issuedAt: LocalDateTime
+  }
+
+  class Payment {
+    +id: UUID
+    +amount: Money
+    +status: PaymentStatus
+    +paidAt: LocalDateTime
+  }
+
+  class Photo {
+    +id: UUID
+    +url: String
+    +takenAt: LocalDateTime
+    +sharedWithParent: boolean
+  }
+
+  class Feedback {
+    +id: UUID
+    +message: String
+    +createdAt: LocalDateTime
+  }
+
+  class Enrollment {
+    +id: UUID
+    +status: EnrollmentStatus
+    +createdAt: LocalDateTime
+  }
+
+  class SupplyReport {
+    +id: UUID
+    +items: String
+    +reportedAt: LocalDateTime
+  }
+
+  class RepairReport {
+    +id: UUID
+    +description: String
+    +reportedAt: LocalDateTime
+  }
+}
+
+package "comm" {
+  class Message {
+    +id: UUID
+    +sentAt: LocalDateTime
+    +content: String
+  }
+}
+
+package "services" {
+  class AdminService {
+    +addCamper(c: Camper): Camper
+    +removeCamper(camperId: UUID): boolean
+    +suspendCamper(c: Camper, start: LocalDate, end: LocalDate, reason: String): CamperSuspension
+    +createRule(text: String): Rule
+    +modifyRule(rule: Rule, newText: String): void
+    +assignStaffPosition(staff: Staff, position: Position): void
+    +warnStaff(staff: Staff, reason: String): StaffWarning
+    +createReminder(message: String, dueAt: LocalDateTime, task: Task): Reminder
+    +createGroup(group: Group): Group
+    +uploadForm(template: FormTemplate): FormTemplate
+    +generateNameTags(group: Group): List<NameTag>
+    +notifyAllParents(title: String, body: String): Notification
+  }
+
+  class SchedulingService {
+    +scheduleActivity(group: Group, activity: Activity): Activity
+    +modifyActivity(activity: Activity, start: LocalDateTime, end: LocalDateTime): void
+    +deleteActivity(activity: Activity): boolean
+    +bookFacility(activity: Activity, facility: Facility, start: LocalDateTime, end: LocalDateTime): FacilityBooking
+    +viewGroupSchedule(group: Group): List<Activity>
+    +logAttendance(campers: List<Camper>, date: LocalDate, group: Group, counselor: Counselor): List<AttendanceRecord>
+  }
+
+  class FormService {
+    +submitForm(parent: Parent, camper: Camper, submission: FormSubmission): FormSubmission
+    +listSubmittedForms(camper: Camper): List<FormSubmission>
+    +getMedicalForms(camper: Camper): List<MedicalFormSubmission>
+    +createRegistrationTemplate(type: RegistrationType, title: String): RegistrationFormTemplate
+    +submitRegistration(form: RegistrationFormTemplate, parent: Parent, camper: Camper, staff: Staff): RegistrationFormSubmission
+  }
+
+  class MessagingService {
+    +sendMessage(from: User, to: User, content: String): Message
+    +notifyParents(parents: List<Parent>, title: String, body: String): Notification
+    +broadcastToGroup(group: Group, body: String): Notification
+  }
+
+  class EnrollmentService {
+    +enrollCamper(parent: Parent, camper: Camper, year: CampYear): Enrollment
+    +editEnrollment(enrollment: Enrollment, status: EnrollmentStatus): void
+    +removeCamper(camper: Camper): boolean
+  }
+}
+
+' =======================
+' Associations
+' =======================
+
+Parent "1" -- "*" Camper : "registers"
+Camper "1" -- "*" EmergencyContact : "has"
+Camper "1" -- "1" EmergencyInfo : "medical info"
+Group "1" -- "*" Camper : "includes"
+Activity "*" -- "1" Group : "assigned to"
+Activity "*" -- "1" Facility : "uses"
+FacilityBooking "*" -- "1" Facility : "books"
+TaskAssignment "*" -- "1" Task : "assigned"
+CompletionReport "*" -- "1" TaskAssignment : "reports on"
+Payment "*" -- "1" Camper : "payment for"
+Photo "*" -- "1" Camper : "taken of"
+Message "*" -- "*" User : "sent between"
+
+@enduml

@@ -1,0 +1,87 @@
+@startuml
+package "autopilot" {
+    class Autopilot {
+        +rollActuatorCommand(): double
+        +engage() : void
+        +disengage() : void
+    }
+    
+    class RollHoldMode {
+        +active: boolean
+        +rollHoldReference: double
+        
+        +engage() : void
+        -setRollHoldReference(double) : void
+    }
+    
+    class HeadingHoldMode {
+        +active: boolean
+        +headingHoldReference: double
+        
+        +engage() : void
+        -setHeadingHoldReference(double) : void
+    }
+    
+    Autopilot --> "*" RollHoldMode
+    Autopilot --> "*" HeadingHoldMode
+    
+    package "modes" {
+        class RollHoldMode --> "1..*" RollCommand
+        class RollHoldMode --> "0..*" RollHoldReferenceSetting
+        
+        class HeadingHoldMode --> "0..*" HeadingHoldReferenceSetting
+    }
+}
+
+package "controls" {
+    class Cockpit {
+        +engageAutopilotSwitch() : void
+        +disengageAutopilotSwitch() : void
+        +turnKnobCommand(): double
+    }
+    
+    class Pilot {
+        +selectHeadingSwitch() : void
+        +deselectHeadingSwitch() : void
+    }
+}
+
+package "actuators" {
+    class RollActuator {
+        -command(double) : void
+    }
+}
+
+package "sensors" {
+    class AircraftAttitudeSensor {
+        +actualRollAngle(): double
+    }
+}
+
+Autopilot --> "1" Cockpit
+Cockpit --> "*" Autopilot
+    
+Pilot --> "1..*" HeadingHoldMode
+HeadingHoldMode --> "1" Pilot
+
+AircraftAttitudeSensor --> "1" RollHoldMode
+RollActuator --> "1" Autopilot
+
+interface CommandTracker {
+    -trackCommand(double) : void
+}
+
+class SteadyStateRollCommandTracker implements CommandTracker {
+    -trackCommand(double) : void
+}
+
+class StepRollCommandTracker implements CommandTracker {
+    -trackCommand(double) : void
+}
+
+Autopilot --> "1" CommandTracker
+    
+enum BandwidthType { SMALL_SIGNAL, LARGE_COMMAND }
+enum OvershootLimit { CALM_AIR_10, DEFAULT }
+
+@enduml

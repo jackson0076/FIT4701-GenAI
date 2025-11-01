@@ -1,0 +1,335 @@
+@startuml
+
+package "users" {
+    abstract class User {
+        -String userId
+        -String firstName
+        -String lastName
+        -String email
+        -String phoneNumber
+        -Date createdDate
+        +String getUserId()
+        +void setEmail(String email)
+        +String getFullName()
+        +boolean authenticate(String password)
+    }
+    
+    class CampAdministrator {
+        -String adminLevel
+        +void addCamper(Camper camper)
+        +void removeCamper(String camperId)
+        +void suspendCamper(String camperId, String reason)
+        +void createGroup(String groupName)
+        +void scheduleActivity(Activity activity)
+        +void assignStaffPosition(CampWorker worker, String position)
+        +void warnWorker(String workerId, String warning)
+        +void createRule(Rule rule)
+        +void generateNametags(List<Camper> campers)
+        +void sendBulkNotification(String message)
+    }
+    
+    class Parent {
+        -List<String> childrenIds
+        +void enrollChild(Camper camper)
+        +void submitForm(ConsentForm form)
+        +List<ConsentForm> getSubmittedForms()
+        +void makePayment(Payment payment)
+        +void submitFeedback(Feedback feedback)
+        +void messageStaff(String staffId, String message)
+        +List<Activity> getChildSchedule(String childId)
+    }
+    
+    class CampWorker {
+        -String position
+        -String department
+        -boolean isActive
+        +void takeAttendance(List<String> camperIds)
+        +void submitReport(Report report)
+        +void reportSupplyShortage(String supplies)
+        +void reportRepairNeeds(String repairs)
+        +List<Camper> getAssignedCampers()
+    }
+    
+    class CampCounselor {
+        -List<String> assignedGroupIds
+        +void markAttendance(String camperId, boolean present)
+        +void reportBehavior(String camperId, String incident)
+        +void sendParentUpdate(String parentId, String update)
+    }
+}
+
+package "campers" {
+    class Camper {
+        -String camperId
+        -String firstName
+        -String lastName
+        -Date birthDate
+        -String medicalInfo
+        -String allergies
+        -boolean isActive
+        -boolean isSuspended
+        -String suspensionReason
+        +int getAge()
+        +boolean hasAllergies()
+        +void updateMedicalInfo(String info)
+        +void setSuspended(boolean suspended, String reason)
+    }
+    
+    class EmergencyContact {
+        -String contactId
+        -String name
+        -String relationship
+        -String phoneNumber
+        -String email
+        -boolean isPrimary
+        +void updateContactInfo(String phone, String email)
+    }
+    
+    class Group {
+        -String groupId
+        -String groupName
+        -int maxCapacity
+        -String ageRange
+        -boolean isActive
+        +void addCamper(String camperId)
+        +void removeCamper(String camperId)
+        +int getCurrentSize()
+        +boolean isFull()
+    }
+}
+
+package "activities" {
+    class Activity {
+        -String activityId
+        -String activityName
+        -String description
+        -Date startTime
+        -Date endTime
+        -int maxParticipants
+        -boolean isActive
+        +void updateSchedule(Date start, Date end)
+        +boolean hasConflict(Activity other)
+        +int getAvailableSpots()
+    }
+    
+    class Facility {
+        -String facilityId
+        -String facilityName
+        -String location
+        -int capacity
+        -boolean isAvailable
+        -String equipmentList
+        +boolean isAvailableAt(Date startTime, Date endTime)
+        +void reserveFor(Activity activity)
+        +void releaseReservation(String activityId)
+    }
+    
+    class Reminder {
+        -String reminderId
+        -String title
+        -String description
+        -Date dueDate
+        -boolean isCompleted
+        -String priority
+        +void markCompleted()
+        +boolean isOverdue()
+        +void snooze(int hours)
+    }
+}
+
+package "forms" {
+    abstract class Form {
+        -String formId
+        -String formType
+        -String title
+        -Date createdDate
+        -boolean isRequired
+        +String getFormId()
+        +void setRequired(boolean required)
+    }
+    
+    class ConsentForm {
+        -String consentType
+        -boolean isSigned
+        -Date signedDate
+        -String signedBy
+        +void signForm(String signerId)
+        +boolean isValid()
+        +Date getExpirationDate()
+    }
+    
+    class MedicalForm {
+        -String medicalConditions
+        -String medications
+        -String allergies
+        -String doctorInfo
+        +void updateMedicalInfo(String conditions, String meds)
+        +boolean hasAllergies()
+    }
+    
+    class RegistrationForm {
+        -String sessionPreference
+        -String specialRequests
+        -boolean isComplete
+        +void submitRegistration()
+        +boolean validateForm()
+    }
+}
+
+package "facilities" {
+    class Rule {
+        -String ruleId
+        -String ruleText
+        -String category
+        -boolean isActive
+        -String applicableTo
+        +void updateRule(String newText)
+        +void activate()
+        +void deactivate()
+    }
+    
+    class Nametag {
+        -String nametagId
+        -String camperName
+        -String groupName
+        -String design
+        -boolean isPrinted
+        +void generateDesign()
+        +void markPrinted()
+    }
+}
+
+package "communications" {
+    class Feedback {
+        -String feedbackId
+        -String subject
+        -String content
+        -Date submittedDate
+        -String priority
+        -boolean isResolved
+        +void markResolved()
+        +void escalate()
+    }
+    
+    class Notification {
+        -String notificationId
+        -String message
+        -Date sentDate
+        -String recipientType
+        -boolean isRead
+        +void markRead()
+        +void send()
+    }
+    
+    class Payment {
+        -String paymentId
+        -double amount
+        -Date paymentDate
+        -String paymentMethod
+        -String status
+        +void processPayment()
+        +boolean isComplete()
+        +void refund(double amount)
+    }
+    
+    class Photo {
+        -String photoId
+        -String filename
+        -Date takenDate
+        -String description
+        -boolean isShared
+        +void shareWithParent(String parentId)
+        +void setPrivacy(boolean isPublic)
+    }
+}
+
+package "reports" {
+    abstract class Report {
+        -String reportId
+        -String reportType
+        -Date submittedDate
+        -String submittedBy
+        -String status
+        +void submitReport()
+        +void updateStatus(String newStatus)
+    }
+    
+    class BehaviorReport {
+        -String incidentDescription
+        -String severity
+        -String actionTaken
+        +void escalateToParent()
+    }
+    
+    class SupplyReport {
+        -String itemsNeeded
+        -String urgency
+        -double estimatedCost
+        +void addSupplyItem(String item, int quantity)
+    }
+    
+    class MaintenanceReport {
+        -String repairDescription
+        -String location
+        -String urgency
+        -double estimatedCost
+        +void scheduleRepair()
+    }
+    
+    class CompletionReport {
+        -String taskDescription
+        -Date completedDate
+        -String notes
+        +void markComplete()
+    }
+}
+
+' Inheritance relationships
+User <|-- CampAdministrator
+User <|-- Parent
+User <|-- CampWorker
+CampWorker <|-- CampCounselor
+Form <|-- ConsentForm
+Form <|-- MedicalForm
+Form <|-- RegistrationForm
+Report <|-- BehaviorReport
+Report <|-- SupplyReport
+Report <|-- MaintenanceReport
+Report <|-- CompletionReport
+
+' User associations
+Parent "1" --> "0..*" Camper : enrolls
+CampAdministrator "1" --> "*" Group : manages
+CampWorker "1" --> "0..*" Group : supervises
+CampCounselor "1" --> "1..*" Camper : counsels
+
+' Camper associations
+Camper "1" --> "1..*" EmergencyContact : has
+Camper "*" --> "0..*" Form : submits
+Camper "*" --> "1" Group : belongs to
+Camper "1" --> "*" Photo : appears in
+Camper "1" --> "*" BehaviorReport : subject of
+
+' Activity and scheduling
+Group "*" --> "*" Activity : participates in
+Activity "1" --> "1" Facility : uses
+Activity "*" --> "1" CampWorker : supervised by
+CampAdministrator "1" --> "*" Activity : schedules
+CampAdministrator "1" --> "*" Reminder : creates
+
+' Forms and payments
+Parent "1" --> "*" Form : submits
+Parent "1" --> "*" Payment : makes
+Parent "1" --> "*" Feedback : provides
+
+' Reports and communications
+CampWorker "1" --> "*" Report : submits
+CampAdministrator "1" --> "*" Rule : creates
+CampAdministrator "1" --> "*" Notification : sends
+Parent "*" --> "*" Notification : receives
+
+' Administrative
+CampAdministrator "1" --> "*" Nametag : generates
+Camper "1" --> "1" Nametag : has
+
+@enduml

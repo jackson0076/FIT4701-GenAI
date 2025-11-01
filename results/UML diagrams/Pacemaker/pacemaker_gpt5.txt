@@ -1,0 +1,452 @@
+@startuml
+
+' ========================
+' PACEMAKER SYSTEM MODEL
+' ========================
+
+package "device" {
+  interface ICommunicable {
+    +sendCommand(cmd: String): boolean
+    +receiveTelemetry(data: TelemetryData): void
+    +getStatus(): DeviceStatus
+  }
+
+  enum PacingMode {
+    OFF
+    DDDR
+    VDDR
+    DDIR
+    DOOR
+    VOOR
+    AOOR
+    VVIR
+    AAIR
+    DDD
+    VDD
+    DDI
+    DOO
+    VOO
+    AOO
+    VVI
+    AAI
+    VVT
+    AAT
+    OVO
+    OAO
+    ODO
+    OOO
+  }
+
+  enum BradyState {
+    PERMANENT
+    TEMPORARY
+    PACE_NOW
+    MAGNET
+    POWER_ON_RESET
+  }
+
+  enum DeviceStatus {
+    OK
+    POR
+    LOW_BATTERY
+    MALFUNCTION
+  }
+
+  class PulseGenerator {
+    -modelNumber: String
+    -serialNumber: String
+    -implantDate: Date
+    -batteryVoltage: Float
+    -batteryStatus: BatteryStatus
+    -atrialLead: Lead
+    -ventricularLead: Lead
+    -pacingParameters: PacingParameters
+    -currentMode: PacingMode
+    -currentState: BradyState
+    +sendCommand(cmd: String): boolean
+    +receiveTelemetry(data: TelemetryData): void
+    +getStatus(): DeviceStatus
+    +setClock(timestamp: Date): void
+    +storeImplantInfo(model: String, serial: String, date: Date): void
+    +measurePRWave(): MeasuredWave
+    +measureLeadImpedance(): LeadImpedanceResult
+    +deliverPace(chamber: Chamber, amplitude: Float, widthMs: Float): void
+    +detectMagnet(distanceCm: Float): boolean
+    +enterPOR(): void
+    +exitPOR(): void
+  }
+
+  PulseGenerator -|> ICommunicable
+
+  class PacingParameters {
+    +mode: PacingMode
+    +lowerRateLimitPpm: Integer
+    +upperRateLimitPpm: Integer
+    +atrialAmplitudeV: Float
+    +ventricularAmplitudeV: Float
+    +atrialPulseWidthMs: Float
+    +ventricularPulseWidthMs: Float
+    +ventricularRefractoryMs: Integer
+    +ventricularSensitivityMv: Float
+    +maxSensorRatePpm: Integer
+    +avDelayMs: Integer
+    +isRateAdaptive: Boolean
+    +programParameters(params: PacingParameters): void
+    +validateForMode(mode: PacingMode): boolean
+  }
+
+  class Lead {
+    +id: String
+    +chamber: Chamber
+    +polarity: LeadPolarity
+    +impedanceOhms: Float
+    +implantDate: Date
+    +measureImpedance(voltageV: Float = 5.5): Float
+    +setPolarity(pol: LeadPolarity): void
+  }
+
+  enum LeadPolarity {
+    BIPOLAR
+    UNIPOLAR
+  }
+
+  enum Chamber {
+    ATRIAL
+    VENTRICULAR
+  }
+
+  class LeadImpedanceResult {
+    +atrialOhms: Float
+    +ventricularOhms: Float
+    +withinOperationalRange(): boolean
+  }
+
+  class MeasuredWave {
+    +pAmplitudeMv: Float
+    +rAmplitudeMv: Float
+    +timestamp: Date
+  }
+}
+
+package "dcm" {
+  interface IUpdatable {
+    +update(): void
+  }
+
+  class DCM {
+    -serialNumber: String
+    -applicationModel: String
+    -applicationVersion: String
+    -internalMonitor: InternalMonitor
+    -stripChartRecorder: StripChartRecorder
+    -printer: Printer
+    -telemetryLink: TelemetryLink
+    -reportGenerator: ReportGenerator
+    -uiManager: gui.WindowManager
+    -lastInterrogationDate: Date
+    -batteryIndicator: BatteryIndicator
+    +sendCommand(cmd: String): boolean
+    +receiveTelemetry(data: TelemetryData): void
+    +getStatus(): DeviceStatus
+    +startSession(device: device.PulseGenerator): boolean
+    +endSession(): void
+    +reInitiateEGMTransmission(): void
+    +printRealTimeTraces(traces: List~RealTimeTrace~, annotated: boolean): boolean
+    +update(): void
+    +setClockOnDevice(timestamp: Date): boolean
+    +newPatientInterrogate(): boolean
+  }
+
+  DCM -|> ICommunicable
+  DCM -|> IUpdatable
+
+  class TelemetryLink {
+    -linkStatus: TelemetryStatus
+    -wand: InductiveWand
+    -lastGoodTimestamp: Date
+    +establishLink(pg: device.PulseGenerator): boolean
+    +breakLink(): void
+    +isInRange(): boolean
+    +isNoisy(): boolean
+  }
+
+  class InductiveWand {
+    +maxRangeCm: Float = 5.0
+    +minRangeCm: Float = 0.0
+    +currentDistanceCm: Float
+    +connect(pg: device.PulseGenerator): boolean
+    +disconnect(): void
+    +withinOperationalRange(): boolean
+  }
+
+  enum TelemetryStatus {
+    CONNECTED
+    LOST_RANGE
+    LOST_NOISE
+    UNKNOWN_DEVICE
+  }
+
+  class InternalMonitor {
+    +displayRealTime(ecg: RealTimeTrace): void
+    +displaySurfaceECG(ecg: RealTimeTrace): void
+    +showAnnotation(marker: EventMarker): void
+  }
+
+  class StripChartRecorder {
+    +record(traces: List~RealTimeTrace~, durationSec: Integer): boolean
+    +print(traces: List~RealTimeTrace~, annotated: boolean): boolean
+  }
+
+  class Printer {
+    +model: String
+    +isReady(): boolean
+    +print(traces: List~RealTimeTrace~, header: reports.ReportHeader): boolean
+  }
+
+  class BatteryIndicator {
+    +status: BatteryStatus
+    +getBatteryLevel(): Float
+    +predictStatus(): BatteryStatus
+  }
+
+  enum BatteryStatus {
+    BOL
+    ERN
+    ERT
+    ERP
+  }
+}
+
+package "telemetry" {
+  class TelemetryData {
+    +timestamp: Date
+    +ecgChannels: List~Float~
+    +annotations: List~EventMarker~
+    +deviceSerial: String
+  }
+
+  class RealTimeTrace {
+    +channelId: Integer
+    +samples: List~Float~
+    +gain: Float
+    +resolution: Integer
+    +startTime: Date
+    +endTime: Date
+  }
+
+  class EventMarker {
+    +code: String
+    +description: String
+    +timeSinceEventMs: Integer
+  }
+}
+
+package "gui" {
+  abstract class GuiComponent {
+    +render(): void
+    +resize(width: Integer, height: Integer): void
+  }
+
+  class WindowManager {
+    +openWindow(id: String, title: String): Window
+    +closeWindow(id: String): void
+    +listWindows(): List~Window~
+  }
+
+  class Window {
+    +id: String
+    +title: String
+    +content: String
+    +isVisible: Boolean
+    +bringToFront(): void
+    +displayText(text: String): void
+    +displayGraphic(graphicData: Binary): void
+  }
+
+  class DisplayManager {
+    +windows: List~Window~
+    +showTelemetryStatus(status: dcm.TelemetryStatus): void
+    +showDeviceApproachWarning(deviceSerial: String): void
+    +showCommunicationIndicator(active: Boolean): void
+    +render(): void
+    +update(): void
+  }
+
+  class InputHandler {
+    +positionX: Integer
+    +positionY: Integer
+    +buttonPressed(buttonId: String): void
+    +getPointerPosition(): Tuple~Integer,Integer~
+    +processButtonEvent(buttonId: String): void
+  }
+
+  class VisualIndicator {
+    +showTelemetryConnected(): void
+    +showTelemetryLostRange(): void
+    +showTelemetryLostNoise(): void
+    +showDifferentDeviceApproached(): void
+  }
+
+  DisplayManager --> "1..*" Window
+  DisplayManager --> "1" VisualIndicator
+  DisplayManager --> "1" InputHandler
+}
+
+package "reports" {
+  enum ReportType {
+    BRADYCARDIA_PARAMETERS
+    TEMPORARY_PARAMETERS
+    IMPLANT_DATA
+    THRESHOLD_TEST_RESULTS
+    MEASURED_DATA
+    MARKER_LEGEND
+    SESSION_NET_CHANGE
+    FINAL_REPORT
+    RATE_HISTOGRAM
+    TRENDING
+  }
+
+  class ReportHeader {
+    +institutionName: String
+    +printedAt: Date
+    +deviceModel: String
+    +deviceSerial: String
+    +dcmSerial: String
+    +appModelAndVersion: String
+    +reportName: String
+  }
+
+  class Report {
+    +header: ReportHeader
+    +type: ReportType
+    +content: String
+    +generatePdf(): Binary
+  }
+
+  class ReportGenerator {
+    +generateReport(type: ReportType, context: ReportContext): Report
+    +generateFinalReport(context: ReportContext): Report
+    +printReport(report: Report): boolean
+  }
+
+  class ReportContext {
+    +patientId: String
+    +sessionId: String
+    +timeRangeStart: Date
+    +timeRangeEnd: Date
+    +includeAnnotations: Boolean
+  }
+}
+
+package "diagnostics" {
+  class DiagnosticTool {
+    +runMeasuredDataAnalysis(context: reports.ReportContext): AnalysisResult
+    +runThresholdTest(mode: device.PacingMode): ThresholdResult
+    +runRateTrending(context: reports.ReportContext): TrendingResult
+    +runRealTimeDiagnostics(): RealTimeDiagnosticResult
+  }
+
+  class ThresholdResult {
+    +atrialThresholdV: Float
+    +ventricularThresholdV: Float
+    +pulseWidthMs: Float
+  }
+
+  class AnalysisResult {
+    +summary: String
+    +details: String
+  }
+
+  class TrendingResult {
+    +histogram: RateHistogram
+    +trends: List~TrendPoint~
+  }
+
+  class RealTimeDiagnosticResult {
+    +isLinkStable: Boolean
+    +noiseLevel: Float
+  }
+
+  class RateHistogram {
+    +buckets: Map~String,Integer~
+    +recordingStart: Date
+    +recordingEnd: Date
+    +reset(): void
+    +recordEvent(event: HistogramEvent): void
+  }
+
+  class TrendPoint {
+    +timestamp: Date
+    +ratePpm: Integer
+  }
+
+  class HistogramEvent {
+    +type: HistogramEventType
+    +timestamp: Date
+    +intervalMs: Integer
+  }
+
+  enum HistogramEventType {
+    SENSE_ATRIAL
+    PACE_ATRIAL
+    SENSE_VENTRICULAR
+    PACE_VENTRICULAR
+  }
+}
+
+package "sensors" {
+  class Accelerometer {
+    +responseFactor: Integer
+    +activityThreshold: Float
+    +maxSensorRatePpm: Integer
+    +recoveryTimeSec: Integer
+    +determineRate(activityLevel: Float): Integer
+    +measureMotionSamples(durationSec: Integer): List~Float~
+  }
+}
+
+package "control" {
+  class Operator {
+    +operatorId: String
+    +name: String
+    +institution: String
+    +openSession(dcm: dcm.DCM, pg: device.PulseGenerator): boolean
+    +closeSession(): void
+    +generateReport(type: reports.ReportType, context: reports.ReportContext): reports.Report
+    +setDeviceClock(timestamp: Date): boolean
+  }
+
+  class Session {
+    +sessionId: String
+    +operator: Operator
+    +device: device.PulseGenerator
+    +dcm: dcm.DCM
+    +startTime: Date
+    +endTime: Date
+    +isActive(): Boolean
+    +terminate(): void
+  }
+
+  Operator --> "0..*" Session
+  Session --> "1" device.PulseGenerator
+  Session --> "1" dcm.DCM
+}
+
+' ========================
+' Associations
+' ========================
+dcm.DCM --> "1" dcm.Printer
+dcm.DCM --> "1" dcm.InternalMonitor
+dcm.DCM --> "1" dcm.StripChartRecorder
+dcm.DCM --> "1" reports.ReportGenerator
+dcm.DCM --> "1" gui.WindowManager
+dcm.DCM --> "1" diagnostics.DiagnosticTool
+
+dcm.DCM --> "1" dcm.TelemetryLink
+dcm.TelemetryLink --> "1" dcm.InductiveWand
+
+device.PulseGenerator --> "1" device.PacingParameters
+device.PulseGenerator --> "1" device.Lead : atrialLead
+device.PulseGenerator --> "1" device.Lead : ventricularLead
+
+@enduml

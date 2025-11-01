@@ -1,0 +1,366 @@
+@startuml
+
+package "user" {
+    abstract class User {
+        -String userId
+        -String email
+        -String zipCode
+        -String password
+        -boolean isActive
+        +User(String email, String zipCode)
+        +String getUserId()
+        +void setEmail(String email)
+        +String getEmail()
+        +void setZipCode(String zipCode)
+        +String getZipCode()
+        +boolean authenticate(String password)
+        +void updateProfile(String email, String zipCode)
+    }
+
+    class RegularUser {
+        -List<String> favoriteIds
+        -Schedule weeklySchedule
+        +RegularUser(String email, String zipCode)
+        +void addFavorite(String facilityId)
+        +void removeFavorite(String facilityId)
+        +List<String> getFavorites()
+        +void uploadSchedule(Schedule schedule)
+        +Schedule getSchedule()
+    }
+
+    class Admin {
+        -String adminLevel
+        +Admin(String email, String zipCode, String level)
+        +void addRecyclingCenter(RecyclingCenter center)
+        +void removeRecyclingCenter(String centerId)
+        +void blockUser(String ipAddress)
+        +List<Feedback> viewFeedback()
+        +Dashboard getDashboard()
+        +void communicateWithFacility(String facilityId, String message)
+    }
+
+    class Superuser {
+        -List<String> managedCenterIds
+        +Superuser(String email, String zipCode)
+        +void updateCenterInfo(String centerId, RecyclingCenter info)
+        +Statistics getUserStats(String centerId)
+        +void replyToUserQuestion(String questionId, String response)
+    }
+
+    class Employee {
+        -String department
+        -String employeeId
+        +Employee(String email, String zipCode, String dept)
+        +Routeplan getRouteplan()
+        +void receiveNotification(Notification notification)
+    }
+
+    class Executive {
+        +Executive(String email, String zipCode)
+        +CompanyData getCompanyData()
+        +PerformanceReport getPerformanceReport()
+    }
+
+    RegularUser --|> User
+    Admin --|> User
+    Superuser --|> User
+    Employee --|> User
+    Executive --|> User
+}
+
+package "facility" {
+    class RecyclingCenter {
+        -String centerId
+        -String name
+        -Address address
+        -OperatingHours hours
+        -List<String> acceptedWasteTypes
+        -boolean isEcoFriendly
+        -String contactInfo
+        +RecyclingCenter(String name, Address address)
+        +String getCenterId()
+        +Address getAddress()
+        +OperatingHours getHours()
+        +void setHours(OperatingHours hours)
+        +List<String> getAcceptedWasteTypes()
+        +void addWasteType(String wasteType)
+        +void removeWasteType(String wasteType)
+        +boolean isEcoFriendly()
+        +String getContactInfo()
+    }
+
+    class Address {
+        -String street
+        -String city
+        -String state
+        -String zipCode
+        -double latitude
+        -double longitude
+        +Address(String street, String city, String state, String zipCode)
+        +String getFullAddress()
+        +String getMapUrl()
+        +double getLatitude()
+        +double getLongitude()
+    }
+
+    class OperatingHours {
+        -Map<DayOfWeek, TimeRange> schedule
+        +OperatingHours()
+        +void setHours(DayOfWeek day, TimeRange range)
+        +TimeRange getHours(DayOfWeek day)
+        +boolean isOpenAt(DayOfWeek day, LocalTime time)
+    }
+
+    enum DayOfWeek {
+        MONDAY
+        TUESDAY
+        WEDNESDAY
+        THURSDAY
+        FRIDAY
+        SATURDAY
+        SUNDAY
+    }
+
+    class TimeRange {
+        -LocalTime start
+        -LocalTime end
+        +TimeRange(LocalTime start, LocalTime end)
+        +LocalTime getStart()
+        +LocalTime getEnd()
+        +boolean contains(LocalTime time)
+    }
+
+    RecyclingCenter --> "1" Address
+    RecyclingCenter --> "1" OperatingHours
+    OperatingHours --> "*" TimeRange : contains
+    TimeRange ..> DayOfWeek : uses
+}
+
+package "waste" {
+    class WasteType {
+        -String typeId
+        -String name
+        -String description
+        -List<String> examples
+        +WasteType(String name, String description)
+        +String getTypeId()
+        +String getName()
+        +String getDescription()
+        +List<String> getExamples()
+    }
+
+    class PublicBin {
+        -String binId
+        -Address location
+        -List<String> acceptedTypes
+        +PublicBin(Address location)
+        +String getBinId()
+        +Address getLocation()
+        +List<String> getAcceptedTypes()
+    }
+
+    class SpecialWasteDropOff {
+        -String siteId
+        -Address location
+        -List<String> specialWasteTypes
+        -OperatingHours hours
+        +SpecialWasteDropOff(Address location)
+        +String getSiteId()
+        +Address getLocation()
+        +List<String> getSpecialWasteTypes()
+        +OperatingHours getHours()
+    }
+
+    PublicBin --> "1" Address
+    SpecialWasteDropOff --> "1" Address
+    SpecialWasteDropOff --> "1" OperatingHours
+}
+
+package "service" {
+    class PickupService {
+        -String serviceId
+        -List<TimeSlot> availableSlots
+        +PickupService()
+        +String getServiceId()
+        +List<TimeSlot> getAvailableSlots()
+        +boolean schedulePickup(String userId, TimeSlot slot)
+        +void cancelPickup(String pickupId)
+    }
+
+    class TimeSlot {
+        -String slotId
+        -LocalDateTime startTime
+        -LocalDateTime endTime
+        -boolean isAvailable
+        +TimeSlot(LocalDateTime start, LocalDateTime end)
+        +String getSlotId()
+        +LocalDateTime getStartTime()
+        +LocalDateTime getEndTime()
+        +boolean isAvailable()
+        +void reserve()
+        +void release()
+    }
+
+    class RouteplanService {
+        +RouteplanService()
+        +Routeplan generateRoute(List<String> facilityIds)
+        +Routeplan optimizeRoute(String userId, List<String> wasteTypes)
+    }
+
+    class Routeplan {
+        -String routeId
+        -List<String> facilityIds
+        -double totalDistance
+        -Duration estimatedTime
+        +Routeplan(List<String> facilityIds)
+        +String getRouteId()
+        +List<String> getFacilityIds()
+        +double getTotalDistance()
+        +Duration getEstimatedTime()
+    }
+
+    PickupService --> "*" TimeSlot : manages
+    RouteplanService ..> Routeplan : creates
+}
+
+package "event" {
+    class DisposalEvent {
+        -String eventId
+        -String title
+        -String description
+        -LocalDateTime dateTime
+        -Address location
+        -List<String> acceptedWasteTypes
+        +DisposalEvent(String title, Address location, LocalDateTime dateTime)
+        +String getEventId()
+        +String getTitle()
+        +String getDescription()
+        +LocalDateTime getDateTime()
+        +Address getLocation()
+        +List<String> getAcceptedWasteTypes()
+    }
+
+    DisposalEvent --> "1" Address
+}
+
+package "communication" {
+    class Notification {
+        -String notificationId
+        -String recipientId
+        -String message
+        -LocalDateTime timestamp
+        -boolean isRead
+        +Notification(String recipientId, String message)
+        +String getNotificationId()
+        +String getMessage()
+        +LocalDateTime getTimestamp()
+        +boolean isRead()
+        +void markAsRead()
+    }
+
+    class Feedback {
+        -String feedbackId
+        -String userId
+        -String message
+        -LocalDateTime timestamp
+        -FeedbackType type
+        +Feedback(String userId, String message, FeedbackType type)
+        +String getFeedbackId()
+        +String getUserId()
+        +String getMessage()
+        +FeedbackType getType()
+        +LocalDateTime getTimestamp()
+    }
+
+    enum FeedbackType {
+        COMPLAINT
+        SUGGESTION
+        QUESTION
+        COMPLIMENT
+    }
+
+    Feedback ..> FeedbackType : uses
+}
+
+package "transaction" {
+    class Transaction {
+        -String transactionId
+        -String userId
+        -String facilityId
+        -LocalDateTime timestamp
+        -List<String> wasteTypes
+        -TransactionStatus status
+        +Transaction(String userId, String facilityId)
+        +String getTransactionId()
+        +String getUserId()
+        +String getFacilityId()
+        +LocalDateTime getTimestamp()
+        +List<String> getWasteTypes()
+        +TransactionStatus getStatus()
+        +void addWasteType(String wasteType)
+        +void updateStatus(TransactionStatus status)
+    }
+
+    class TransactionHistory {
+        -String userId
+        -List<Transaction> transactions
+        +TransactionHistory(String userId)
+        +void addTransaction(Transaction transaction)
+        +List<Transaction> getTransactions()
+        +List<Transaction> getTransactionsByDateRange(LocalDate start, LocalDate end)
+    }
+
+    enum TransactionStatus {
+        SCHEDULED
+        IN_PROGRESS
+        COMPLETED
+        CANCELLED
+    }
+
+    TransactionHistory --> "*" Transaction : contains
+    Transaction ..> TransactionStatus : uses
+}
+
+package "system" {
+    class Dashboard {
+        -String dashboardId
+        -Map<String, Integer> usageStats
+        -List<String> activeUsers
+        +Dashboard()
+        +Map<String, Integer> getUsageStats()
+        +List<String> getActiveUsers()
+        +void updateStats()
+    }
+
+    class ApiService {
+        -String apiKey
+        -String version
+        +ApiService(String apiKey)
+        +String processRequest(String endpoint, Map<String, Object> parameters)
+        +boolean validateApiKey(String key)
+    }
+
+    class Schedule {
+        -String scheduleId
+        -Map<DayOfWeek, List<TimeRange>> weeklySchedule
+        +Schedule()
+        +void addAvailability(DayOfWeek day, TimeRange timeRange)
+        +List<TimeRange> getAvailability(DayOfWeek day)
+        +boolean isAvailable(DayOfWeek day, LocalTime time)
+    }
+
+    Schedule --> "*" TimeRange : contains
+}
+
+' Relationships between packages
+RegularUser --> "*" RecyclingCenter : favorites
+RegularUser --> "1" TransactionHistory : has
+User --> "*" Notification : receives
+User --> "*" Feedback : provides
+Admin --> "1" Dashboard : monitors
+RecyclingCenter --> "*" WasteType : accepts
+Transaction --> "1" RecyclingCenter : involves
+DisposalEvent --> "*" WasteType : accepts
+Superuser --> "*" RecyclingCenter : manages
+
+@enduml

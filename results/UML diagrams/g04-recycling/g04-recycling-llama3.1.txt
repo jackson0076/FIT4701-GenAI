@@ -1,0 +1,133 @@
+@startuml
+package "gui" {
+    User --> "+" Account_manager
+    User --> "+" Display_manager
+
+    abstract Updatable
+
+    Profile_layout --|> Updatable
+    Account_manager --|> Updatable
+    Display_manager --|> Updatable
+    Feedback_form --|> Updatable
+
+    abstract Gui_control
+
+    Profile_layout --|> Gui_control
+    Account_manager --|> Gui_control
+    Display_manager --|> Gui_control
+
+    Display_manager --> "1" InputBox
+    Display_manager --> "1" Map_view
+    Display_manager --> "1" Account_manager 
+    Display_manager --> "1" Profile_layout
+
+    Account_manager --> "+" Feedback_form
+    Account_manager --> "+" Donation_center_manager
+}
+
+package "connection" {
+    Web_service --> "1" ConnectionManager
+}
+
+package "model" {
+    Recycling_facility --> "*" User
+    Recycling_facility --> "+" Map_data
+    User --> "+" Account
+}
+
+package "control" {
+    Katch --> "1" Map_view
+    Katch --> "1" Donation_center_manager
+    Gui_control --> "1" Katch
+    ConnectionManager --> "1" Katch
+}
+
+class Updatable {
+    +void update()
+}
+
+class Account {
+    +String username
+    +String email
+    -String password
+}
+
+class User {
+    +Account account
+    +Profile profile
+    +Map_view map_view
+}
+
+class Profile {
+    +String name
+    +String address
+    +String zip_code
+}
+
+class Donation_center_manager {
+    +User user
+    +"1..*" Donation_center
+}
+
+class Donation_center {
+    +Recycling_facility facility
+    +Schedule schedule
+}
+
+class Map_view {
+    +User user
+    +Map_data map_data
+}
+
+class Map_data {
+    +"1..*" Recycling_facility
+    +"1..*" Public_bin
+    +"1..*" Special_waste_drop_off_site
+}
+
+class Feedback_form {
+    +User user
+    +Feedback feedback
+}
+
+class Feedback {
+    +String message
+    +Rating rating
+}
+
+class Rating {
+    +int value
+}
+
+class Account_manager {
+    +User user
+    +"1..*" Donation_center
+}
+
+class Profile_layout {
+    +User user
+    +Profile profile
+}
+
+class Display_manager {
+    +User user
+    +Gui_control gui_control
+}
+
+class Gui_control {
+    +Display_manager display_manager
+    +"1" Map_view
+    +"1" Feedback_form
+}
+
+class Katch {
+    -Map_view map_view
+    -Donation_center_manager donation_center_manager
+    -ConnectionManager connection_manager
+}
+
+class ConnectionManager {
+    -Katch katch
+}
+
+@enduml

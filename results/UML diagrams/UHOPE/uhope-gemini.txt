@@ -1,0 +1,91 @@
+@startuml
+
+package "actors" {
+    abstract class User {
+        +String userId
+        +String name
+        +String email
+    }
+
+    class Patient {
+        +Date dateOfBirth
+        +String address
+        +String phone
+        +String nationalId
+        +List<TestResult> getTestResults()
+        +List<MedicalRecord> getMedicalHistory()
+    }
+
+    class Employee {
+        +String employeeId
+        +String department
+    }
+
+    class UHOPE_Employee {
+        +boolean canAccess(Patient patient)
+    }
+
+    class Receptionist {
+        +Patient searchPatient(String patientName)
+        +void editPatientFile(Patient patient)
+        +MedicalRecord viewPatientMedicalFile(Patient patient)
+        +Appointment viewAppointment()
+    }
+
+    class Doctor {
+        +List<Patient> getOwnPatients()
+        +void enterAppointment(Appointment appointment)
+        +void editMedicalFile(MedicalRecord record)
+    }
+
+    User <|-- Patient
+    User <|-- Employee
+    Employee <|-- UHOPE_Employee
+    UHOPE_Employee <|-- Receptionist
+    UHOPE_Employee <|-- Doctor
+}
+
+package "core" {
+    class MedicalRecord {
+        +String recordId
+        +List<String> treatments
+        +List<TestResult> testResults
+    }
+
+    class TestResult {
+        +String testId
+        +String testName
+        +String result
+        +Date datePerformed
+    }
+
+    class Appointment {
+        +String appointmentId
+        +Date date
+        +String description
+    }
+}
+
+package "database" {
+    class EMR_Database {
+        +void addPatient(Patient patient)
+        +MedicalRecord getMedicalRecord(String patientId)
+        +void updateMedicalRecord(MedicalRecord record)
+    }
+
+    interface NationalDatabase {
+        +List<MedicalRecord> getMedicalFiles(List<String> patientIds)
+    }
+}
+
+Patient "1" --> "0..*" MedicalRecord : has
+MedicalRecord "1" --> "1..*" TestResult : has
+Doctor "1" --> "1" Appointment : enters
+Patient "1" --> "1" Appointment : for
+Doctor "1" -- "0..*" Patient : treats
+UHOPE_Employee "1" -- "1" EMR_Database : accesses
+EMR_Database "1" -- "1" NationalDatabase : synchronizesWith
+Receptionist "1" -- "1" EMR_Database : accesses
+Doctor "1" -- "1" EMR_Database : accesses
+
+@enduml

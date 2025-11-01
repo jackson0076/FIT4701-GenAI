@@ -1,0 +1,111 @@
+@startuml
+package "control" {
+    class Autopilot {
+        - state: AutopilotState
+        - pullupLatched: boolean
+        + getCurrentState(): AutopilotState
+        + transitionTo(newState: AutopilotState): void
+        + latchPullup(): void
+        + clearPullup(): void
+        + isPullupLatched(): boolean
+        + handleStateTransition(): void
+    }
+    
+    interface StateMachine {
+        + getCurrentState(): State
+        + transitionTo(newState: State): void
+    }
+    
+    abstract class SystemComponent {
+        # isActive: boolean
+        + isOperational(): boolean
+        + getStatus(): ComponentStatus
+    }
+}
+
+package "sensors" {
+    class Sensor {
+        - state: SensorState
+        - limitsExceeded: boolean
+        - isRequested: boolean
+        + getCurrentState(): SensorState
+        + transitionTo(newState: SensorState): void
+        + checkLimits(): boolean
+        + setLimitsExceeded(exceeded: boolean): void
+        + isLimitsExceeded(): boolean
+        + setRequested(requested: boolean): void
+        + isRequested(): boolean
+    }
+    
+    class SensorManager {
+        - sensors: List<Sensor>
+        + addSensor(sensor: Sensor): void
+        + getAllSensors(): List<Sensor>
+        + getSensorData(): SensorData
+        + isSensorDataGood(): boolean
+    }
+}
+
+package "system" {
+    class Pilot {
+        - inControl: boolean
+        + isInControl(): boolean
+        + setInControl(control: boolean): void
+        + isStandby(): boolean
+    }
+    
+    class SystemStatus {
+        - supported: boolean
+        - failed: boolean
+        + isSupported(): boolean
+        + setSupported(supported: boolean): void
+        + hasFailed(): boolean
+        + setFailed(failed: boolean): void
+        + isOperational(): boolean
+    }
+    
+    class FlightController {
+        + processAutopilotLogic(): void
+        + evaluateSystemState(): void
+        + handleEmergencyPullup(): void
+    }
+}
+
+enum AutopilotState {
+    STANDBY
+    TRANSITION
+    NOMINAL
+    MANEUVER
+    PULLUP
+}
+
+enum SensorState {
+    NOMINAL
+    FAULT
+    TRANSITION
+}
+
+enum ComponentStatus {
+    OPERATIONAL
+    DEGRADED
+    FAILED
+}
+
+Autopilot --|> StateMachine
+Sensor --|> StateMachine
+Autopilot --|> SystemComponent
+Sensor --|> SystemComponent
+
+FlightController --> "1" Autopilot : controls
+FlightController --> "1" SensorManager : monitors
+FlightController --> "1" Pilot : checks
+FlightController --> "1" SystemStatus : evaluates
+
+Autopilot --> "1" Pilot : responds_to
+Autopilot --> "1" SystemStatus : monitors
+Autopilot --> "1" SensorManager : receives_data_from
+
+SensorManager --> "1..*" Sensor : manages
+Sensor --> "1" Autopilot : reports_to
+
+@enduml

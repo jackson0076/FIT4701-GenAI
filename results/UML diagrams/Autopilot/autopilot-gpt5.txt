@@ -1,0 +1,218 @@
+@startuml
+' ===== Packages =====
+package "domain" {
+  enum EngagementState {
+    ENGAGED
+    DISENGAGED
+  }
+
+  enum LateralModeType {
+    ROLL_HOLD
+    HEADING_HOLD
+  }
+
+  class AircraftState {
+    +rollAngleDeg: double
+    +rollRateDegPerSec: double
+    +headingDeg: double
+    +updateFrom(att: sensors.AttitudeSource, hdg: sensors.HeadingSource): void
+  }
+}
+
+package "cockpit" {
+  class AutopilotSwitch {
+    -selected: boolean
+    +isSelected(): boolean
+    +setSelected(selected: boolean): void
+  }
+
+  class HeadingSwitch {
+    -selected: boolean
+    +isSelected(): boolean
+    +setSelected(selected: boolean): void
+  }
+
+  class TurnKnob {
+    -commandDeg: double
+    +getCommandDeg(): double
+    +setCommandDeg(deg: double): void
+  }
+
+  class HeadingSelector {
+    -selectedHeadingDeg: double
+    +getSelectedHeadingDeg(): double
+    +setSelectedHeadingDeg(deg: double): void
+  }
+
+  class CockpitInterface {
+    +apSwitch: AutopilotSwitch
+    +hdgSwitch: HeadingSwitch
+    +turnKnob: TurnKnob
+    +headingSelector: HeadingSelector
+    +isAPSelected(): boolean
+    +isHeadingSelected(): boolean
+    +readTurnKnobDeg(): double
+    +readSelectedHeadingDeg(): double
+  }
+
+  CockpitInterface --> "1" AutopilotSwitch : apSwitch
+  CockpitInterface --> "1" HeadingSwitch : hdgSwitch
+  CockpitInterface --> "1" TurnKnob : turnKnob
+  CockpitInterface --> "1" HeadingSelector : headingSel
+}
+
+package "sensors" {
+  interface AttitudeSource {
+    +getRollAngleDeg(): double
+    +getRollRateDegPerSec(): double
+  }
+
+  interface HeadingSource {
+    +getHeadingDeg(): double
+  }
+
+  class AircraftSensors {
+    +getRollAngleDeg(): double
+    +getRollRateDegPerSec(): double
+    +getHeadingDeg(): double
+  }
+
+  AircraftSensors ..|> AttitudeSource
+  AircraftSensors ..|> HeadingSource
+}
+
+package "actuators" {
+  class RollActuator {
+    -currentCmdDeg: double
+    +setAileronCommandDeg(cmdDeg: double): void
+    +getCurrentCommandDeg(): double
+  }
+}
+
+package "control" {
+  interface Controller {
+    +compute(refDeg: double, state: domain.AircraftState, dtSec: double): double
+  }
+
+  class RollController {
+    +steadyStateToleranceDeg: double = 1.0            ' Req 7
+    +stepOvershootMax: double = 0.10                  ' Req 8 (10%)
+    +smallSignalBandwidthMinRadPerSec: double = 0.5   ' Req 9
+    +maxRollRateDegPerSec: double = 6.0               ' Req 10
+    +rollRateTolerance: double = 0.10                 ' +/-10%
+    +maxRollAngleDeg: double = 30.0                   ' Req 11
+    +rollAngleTolerance: double = 0.10                ' +/-10%
+    +maxAileronCmdDeg: double = 15.0                  ' Req 12
+    +compute(refDeg: double, state: domain.AircraftState, dtSec: double): double
+    +limitRollAngle(refDeg: double): double
+    +limitAileron(cmdDeg: double): double
+  }
+
+  RollController ..|> Controller
+}
+
+package "modes" {
+  interface LateralMode {
+    +getType(): domain.LateralModeType
+    +activate(): void
+    +deactivate(): void
+    +isActive(): boolean
+    +updateReferences(state: domain.AircraftState, cockpit: cockpit.CockpitInterface): void
+    +getReferenceDeg(): double
+  }
+
+  abstract class HoldMode {
+    -active: boolean
+    +activate(): void
+    +deactivate(): void
+    +isActive(): boolean
+    +getType(): domain.LateralModeType
+    +updateReferences(state: domain.AircraftState, cockpit: cockpit.CockpitInterface): void
+    +getReferenceDeg(): double
+  }
+
+  class RollHoldMode {
+    -referenceDeg: double
+    +getType(): domain.LateralModeType
+    +activate(): void
+    +deactivate(): void
+    +isActive(): boolean
+    +updateReferences(state: domain.AircraftState, cockpit: cockpit.CockpitInterface): void
+    +getReferenceDeg(): double
+  }
+
+  class HeadingHoldMode {
+    -referenceHeadingDeg: double
+    +getType(): domain.LateralModeType
+    +activate(): void
+    +deactivate(): void
+    +isActive(): boolean
+    +updateReferences(state: domain.AircraftState, cockpit: cockpit.CockpitInterface): void
+    +getReferenceDeg(): double
+  }
+
+  HoldMode ..|> LateralMode
+  RollHoldMode --|> HoldMode
+  HeadingHoldMode --|> HoldMode
+}
+
+package "autopilot" {
+  class ModeManager {
+    -modes: List<modes.LateralMode>
+    +activeMode: modes.LateralMode
+    +register(mode: modes.LateralMode): void
+    +selectActive(type: domain.LateralModeType): void
+    +getActive(): modes.LateralMode
+    +hasActive(): boolean
+  }
+
+  class Autopilot {
+    -state: domain.EngagementState
+    +cockpit: cockpit.CockpitInterface
+    +modeManager: ModeManager
+    +rollController: control.RollController
+    +actuator: actuators.RollActuator
+    +attitudeSrc: sensors.AttitudeSource
+    +headingSrc: sensors.HeadingSource
+    +aircraftState: domain.AircraftState
+    +engage(): void                               ' Req 1
+    +disengage(): void                            ' Req 1
+    +isEngaged(): boolean
+    +update(dtSec: double): void                  ' orchestration loop
+    +commandWhenDisengaged(): void                ' sends 0 to actuator (Req 1)
+    +ensureDefaultLateralMode(): void             ' activates Roll Hold if none (Req 2)
+  }
+
+  Autopilot --> "1" ModeManager : uses
+  Autopilot --> "1" control.RollController : computes
+  Autopilot --> "1" actuators.RollActuator : commands
+  Autopilot --> "1" cockpit.CockpitInterface : reads
+  Autopilot --> "1" domain.AircraftState : updates
+  domain.AircraftState --> "1" sensors.AttitudeSource : from
+  domain.AircraftState --> "1" sensors.HeadingSource : from
+
+  ModeManager --> "0..*" modes.LateralMode : manages
+  ModeManager --> "1" modes.LateralMode : active
+}
+
+' ===== Cross-package associations & notes capturing key requirements =====
+
+' Roll Hold reference rules (Req 3–6)
+modes.RollHoldMode --> "1" cockpit.CockpitInterface : reads turn knob
+modes.RollHoldMode --> "1" domain.AircraftState : reads roll angle
+
+' Heading Hold reference set by pilot (Req 14)
+modes.HeadingHoldMode --> "1" cockpit.CockpitInterface : reads heading selector
+
+' Mode selection by pilot (Req 13)
+cockpit.HeadingSwitch --> "1" autopilot.ModeManager : selects HEADING_HOLD
+cockpit.AutopilotSwitch --> "1" autopilot.Autopilot : engages/disengages
+
+' Controller output to actuator with limits (Req 10–12)
+control.RollController --> "1" actuators.RollActuator : outputs aileron cmd
+
+' Default lateral mode behavior (Req 2)
+autopilot.ModeManager --> "1" modes.RollHoldMode : default when AP engaged
+
+
+@enduml

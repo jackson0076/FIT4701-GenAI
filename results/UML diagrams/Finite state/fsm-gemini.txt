@@ -1,0 +1,62 @@
+@startuml
+skinparam classDiagram {
+    attributeFontSize 10
+    associationFontSize 10
+}
+
+package "Autopilot" {
+    class Autopilot {
+        -state: AutopilotState
+        -pilotInControl: boolean
+        -systemSupported: boolean
+        -sensorDataGood: boolean
+        -apFail: boolean
+        --
+        +changeState(): void
+        +pullup(): void
+    }
+
+    enum AutopilotState {
+        TRANSITION
+        STANDBY
+        NOMINAL
+        MANEUVER
+        PULLUP
+    }
+
+    Autopilot "1" -- "1" AutopilotState : has
+}
+
+package "Sensor" {
+    class Sensor {
+        -state: SensorState
+        -limitsExceeded: boolean
+        -requestSupport: boolean
+        -correctActiveMode: boolean
+        --
+        +changeState(): void
+    }
+
+    enum SensorState {
+        NOMINAL
+        FAULT
+        TRANSITION
+    }
+
+    Sensor "1" -- "1" SensorState : has
+}
+
+package "System" {
+    class SystemControl {
+        +checkAutopilotStatus(): boolean
+        +checkSensorStatus(): boolean
+        +checkPilotControl(): boolean
+    }
+}
+
+Autopilot "1" -- "1" SystemControl : checks
+Sensor "1" -- "1" SystemControl : checks
+SystemControl "1" -- "1" Autopilot : controls
+SystemControl "1" -- "1" Sensor : monitors
+Autopilot "1" -- "1" Sensor : requests
+@enduml

@@ -1,0 +1,148 @@
+@startuml
+
+package "domain" {
+    class User {
+        +String id
+        +String name
+        +String email
+        +String password
+        +String role
+    }
+
+    interface Publisher extends User {
+        +void publish()
+    }
+
+    class Camper extends User {
+        +String birthdate
+        +String emergency_contact
+        +String medical_condition
+    }
+
+    class Staff extends User {
+        +String position
+        +String supervisor_id
+    }
+
+    class Parent extends User {
+        +String child_id
+    }
+}
+
+package "domain.camper" {
+    abstract class CamerRecord {
+        -String id
+        -Camper camper
+        -String year
+    }
+
+    class EnrolledCamper extends CamerRecord {
+        +void enroll()
+    }
+
+    class RemovedCamper extends CamerRecord {
+        +void remove()
+    }
+}
+
+package "domain.form" {
+    abstract class Form {
+        +String id
+        +Camper camper
+        -String name
+        -Date submission_date
+    }
+
+    class ConsentForm extends Form {
+        +void submit()
+    }
+
+    class MedicalForm extends Form {
+        +void upload()
+    }
+}
+
+package "domain.activity" {
+    abstract class Activity {
+        +String id
+        -String title
+        -Date date
+    }
+
+    class ScheduledActivity extends Activity {
+        +void schedule()
+    }
+}
+
+package "domain.group" {
+    class Group {
+        +String id
+        +Staff leader_id
+        +List<EnrolledCamper> campers
+    }
+}
+
+package "domain.report" {
+    abstract class Report {
+        +String id
+        -String title
+        -Date date
+    }
+
+    class AttendanceReport extends Report {
+        +void submit()
+    }
+}
+
+package "domain.message" {
+    class Message {
+        +String id
+        +Camper sender_id
+        +Staff recipient_id
+        -String content
+        -Date send_date
+    }
+}
+
+package "domain.facility" {
+    abstract class Facility {
+        +String id
+        -String name
+    }
+
+    class InternalFacility extends Facility {
+        +void schedule()
+    }
+}
+
+package "domain.notification" {
+    abstract class Notification {
+        +String id
+        -Camper camper
+        -Staff staff
+        -String content
+        -Date send_date
+    }
+
+    class ReminderNotification extends Notification {
+        +void remind()
+    }
+
+    class TaskNotification extends Notification {
+        +void notify()
+    }
+}
+
+package "domain.relationship" {
+    Camper --|> EnrolledCamper
+    EnrolledCamper --o Group
+    Staff --|> Leader
+    Leader --* Group
+
+    User --|> Publisher
+    Publisher --o Form
+    Camper --o Form
+    Parent --o Form
+}
+
+@enduml

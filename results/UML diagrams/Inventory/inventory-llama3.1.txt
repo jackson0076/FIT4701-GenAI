@@ -1,0 +1,100 @@
+@startuml
+
+package "gui" {
+  User --> "1" Login_manager
+  Request --> "1" Request_manager
+}
+
+package "model" {
+  Asset --> "*" Department
+  Asset --> "*" Faculty
+  Asset --> "*" University
+
+  class Department {
+    +String name
+    +String id
+    +Collection<Asset> assets
+  }
+
+  class Faculty {
+    +String name
+    +String id
+  }
+
+  class University {
+    +String name
+    +String id
+  }
+
+  class Request {
+    +Date created_date
+    +User creator
+    +RequestStatus status
+    +Asset asset
+    +Collection<Comment> comments
+  }
+
+  class Comment {
+    +Date created_date
+    +User author
+    +String text
+  }
+}
+
+package "auth" {
+  User --> "1..*" Role
+
+  enum Roles {
+    ADMINISTRATIVE_LEVEL
+    INVENTORY_ADMINISTRATOR
+    FACULTY_MEMBER
+    UNIVERSITY_MEMBER
+    DEPARTMENT_MEMBER
+    IT_GROUP_MEMBER
+  }
+
+  class User {
+    +String username
+    +String password
+    +Roles role
+  }
+}
+
+package "inventory" {
+  class Asset {
+    +String id
+    +Department department
+    +Faculty faculty
+    +University university
+    +Collection<Request> requests
+
+    void edit(Asset asset)
+  }
+
+  class RequestManager {
+    +Collection<Request> pending_requests
+
+    void add_request(Request request)
+
+    void approve_request(Request request)
+  }
+}
+
+package "inventory" {
+  User --> "*" Asset
+  IT_group --> "+" Inventory_manager
+
+  class IT_group {
+    +String name
+  }
+
+  class Inventory_manager {
+    +void create_space(String space_name)
+    +void modify_floor_structure(String new_layout)
+  }
+}
+
+RequestManager --> "1" Request
+Asset --> "0..*" Request
+
+@enduml

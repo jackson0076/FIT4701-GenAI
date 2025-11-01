@@ -1,0 +1,108 @@
+@startuml
+
+package "user" {
+    class User {
+        +username: String
+        +email: String
+        +password_hash: String
+        +id: Integer
+        -register(String, String)
+    }
+}
+
+package "publisher" {
+    class Publisher extends User {
+        +name: String
+        +description: String
+        +created_at: Date
+        +updated_at: Date
+        +published_data_packages: DataPackage (0..*)
+        -publish(DataPackage)
+        -unpublish(DataPackage)
+        -delete(DataPackage)
+        -validate(DataPackage)
+    }
+}
+
+package "consumer" {
+    class Consumer extends User {
+        +subscription_plan: SubscriptionPlan
+        +downloaded_data_packages: DataPackage (0..*)
+        -download(DataPackage)
+    }
+}
+
+package "registry" {
+    class DataPackage {
+        +id: Integer
+        +name: String
+        +description: String
+        +created_at: Date
+        +updated_at: Date
+        +publisher: Publisher
+        +resources: Resource (0..*)
+        -publish(Publisher)
+        -unpublish()
+        -delete()
+    }
+
+    class Resource {
+        +id: Integer
+        +data: Binary
+        +format: String
+        +created_at: Date
+        +updated_at: Date
+        +datapackage: DataPackage
+        -upload(DataPackage)
+    }
+}
+
+package "organization" {
+    class Organization {
+        +name: String
+        +description: String
+        +created_at: Date
+        +updated_at: Date
+        +members: User (0..*)
+        +owners: User (0..*)
+        -invite_member(User)
+        -remove_member(User)
+        -make_owner(User)
+        -remove_owner(User)
+    }
+}
+
+package "site" {
+    class Site {
+        +title: String
+        +description: String
+        +created_at: Date
+        +updated_at: Date
+        +admin: User
+        +users: User (0..*)
+        +data_packages: DataPackage (0..*)
+        -set_config(String, String)
+        -get_metrics()
+    }
+}
+
+package "subscription" {
+    class SubscriptionPlan {
+        +name: String
+        +description: String
+        +price: Decimal
+        +created_at: Date
+        +updated_at: Date
+        +site: Site
+        -subscribe(Publisher)
+    }
+}
+
+DataPackage --|> Resource
+Publisher --> "1" DataPackage
+Consumer --> "0..*" DataPackage
+Site --> "1" SubscriptionPlan
+User --|> Publisher
+User --|> Consumer
+
+@enduml

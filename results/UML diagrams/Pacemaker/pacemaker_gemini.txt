@@ -1,0 +1,323 @@
+@startuml
+!pragma layout smetana
+
+package "UI" {
+  class UserInterface {
+    +Window
+    +InputButton
+    +displayRealTimeECG()
+    +displaySurfaceECG()
+    +displayRealTimeTraces()
+    +displayAnnotationMarkers()
+    +displayHistograms()
+    +displayTrending()
+    +indicateDCMCommunication()
+    +indicateTelemetryLostOutOfRange()
+    +indicateTelemetryLostNoise()
+    +indicateDifferentPacemakerApproached()
+  }
+
+  class Report {
+    +institutionName: string
+    +reportDate: Date
+    +reportTime: Time
+    +deviceModel: string
+    +deviceSerialNumber: string
+    +dcmSerialNumber: string
+    +appModel: string
+    +appVersion: string
+    +reportName: string
+  }
+
+  class FinalReport {
+  }
+
+  class BradycardiaParametersReport {
+  }
+
+  class TemporaryParametersReport {
+  }
+
+  class ImplantDataReport {
+  }
+
+  class ThresholdTestResultsReport {
+  }
+
+  class MeasuredDataReport {
+  }
+
+  class MarkerLegendReport {
+  }
+
+  class SessionNetChangeReport {
+  }
+
+  class RateHistogramReport {
+  }
+
+  class TrendingReport {
+  }
+
+  class Application {
+    +about()
+    +newPatient()
+    +quit()
+    +setClock()
+  }
+  
+  UserInterface "1" -- "1" Application: manages
+  UserInterface "1" -- "0..*" Report: provides
+  FinalReport --|> Report
+  BradycardiaParametersReport --|> Report
+  TemporaryParametersReport --|> Report
+  ImplantDataReport --|> Report
+  ThresholdTestResultsReport --|> Report
+  MeasuredDataReport --|> Report
+  MarkerLegendReport --|> Report
+  SessionNetChangeReport --|> Report
+  RateHistogramReport --|> Report
+  TrendingReport --|> Report
+}
+
+package "DCM" {
+  class DCM {
+    +internalMonitor
+    +internalStripChartRecorder
+    +telemetryWand
+    +displayData()
+    +printData()
+    +communicate()
+  }
+}
+
+package "Device" {
+  class Pacemaker {
+    +deviceModel: string
+    +serialNumber: string
+    +implantDate: Date
+    +atrialLeadImplantDate: Date
+    +ventricularLeadImplantDate: Date
+    +atrialLeadPolarity: Polarity
+    +ventricularLeadPolarity: Polarity
+    +atrialThresholds: list<double>
+    +ventricularThresholds: list<double>
+    +pWaveAmplitude: double
+    +rWaveAmplitude: double
+    +atrialLeadImpedance: double
+    +ventricularLeadImpedance: double
+    +indicationsForPacing: string
+    +pacingRate: int
+    +batteryStatus: BatteryStatus
+    +lastInterrogationDate: Date
+    +pulseVoltage: double
+    +pulseWidth: double
+    +atrialPulseAmplitude: double
+    +ventricularPulseAmplitude: double
+    +atrialSensitivity: double
+    +ventricularSensitivity: double
+    +rateSmoothingUp: double
+    +rateSmoothingDown: double
+    +hysteresisRateLimit: int
+    +extendedPVARP: int
+    +setClock(date: Date, time: Time)
+  }
+
+  class LeadSystem {
+    +impedance: double
+  }
+
+  class Leads {
+  }
+  
+  enum Polarity {
+    Bipolar
+  }
+  
+  enum BatteryStatus {
+    BOL
+    ERN
+    ERT
+    ERP
+  }
+  
+  Pacemaker "1" -- "1" LeadSystem: uses
+  LeadSystem "1" -- "2" Leads: contains
+}
+
+package "Pacing" {
+  abstract class PacingMode {
+    +name: string
+    +lowerRateLimit: int
+    +upperRateLimit: int
+    +pacingLogic()
+  }
+
+  class BradycardiaMode {
+  }
+
+  class PacingState {
+  }
+
+  class AsynchronousPacing {
+  }
+
+  class TriggeredPacing {
+  }
+
+  class InhibitedPacing {
+  }
+
+  class TrackedPacing {
+  }
+
+  class FixedAVDelay {
+    +avDelay: int
+    +pAVDelay: int
+    +sAVDelay: int
+  }
+
+  class DynamicAVDelay {
+    +minPAVDelay: int
+    +maxPAVDelay: int
+    +dynamicAVDelay: int
+    +previousCardiacCycleLength: int
+  }
+
+  class AVDelay {
+    +sensedAVDelayOffset: int
+  }
+
+  class RateAdaptive {
+  }
+  
+  enum BradycardiaOperatingMode {
+    Off
+    DDDR
+    VDDR
+    DDIR
+    DOOR
+    VOOR
+    AOOR
+    VVIR
+    AAIR
+    DDD
+    VDD
+    DDI
+    DOO
+    VOO
+    AOO
+    VVI
+    AAI
+    VVT
+    AAT
+  }
+
+  enum TemporaryOperatingMode {
+    OVO
+    OAO
+    ODO
+    OOO
+  }
+  
+  enum PacingStateEnum {
+    Permanent
+    Temporary
+    PaceNow
+    Magnet
+    PowerOnReset
+  }
+  
+  PacingMode <|-- BradycardiaMode
+  PacingMode <|-- AsynchronousPacing
+  PacingMode <|-- TriggeredPacing
+  PacingMode <|-- InhibitedPacing
+  PacingMode <|-- TrackedPacing
+  PacingMode <|-- RateAdaptive
+  PacingMode "1" -- "1" AVDelay: has
+  AVDelay <|-- FixedAVDelay
+  AVDelay <|-- DynamicAVDelay
+}
+
+package "Diagnostic" {
+  class DiagnosticTool {
+  }
+
+  class MeasuredData {
+  }
+
+  class ThresholdTest {
+  }
+
+  class RateTrendingHistograms {
+  }
+
+  class RealTimeData {
+  }
+
+  class Histogram {
+    +lastReset: Date
+    +reset()
+  }
+
+  class Trending {
+    +recordingDuration: RecordingDuration
+  }
+  
+  enum RecordingDuration {
+    Fixed
+    Continuous
+  }
+  
+  DiagnosticTool <|-- MeasuredData
+  DiagnosticTool <|-- ThresholdTest
+  DiagnosticTool <|-- RateTrendingHistograms
+  DiagnosticTool <|-- RealTimeData
+  RateTrendingHistograms "1" -- "0..*" Histogram: records
+  RateTrendingHistograms "1" -- "0..*" Trending: records
+}
+
+package "Algorithm" {
+  class Accelerometer {
+    +responseFactor: int
+    +activityThreshold: double
+    +getRateIncrease()
+    +getRateDecrease()
+    +getSensorRate()
+    +getRecoveryTime()
+  }
+
+  class AtrialTachycardiaResponse {
+    +isDetected: boolean
+    +detectionPeriod: int
+    +durationDelay: int
+    +fallback()
+    +terminate()
+    +modeSwitch()
+  }
+
+  class RateSmoothing {
+    +rateSmoothingUpPercentage: double
+    +rateSmoothingDownPercentage: double
+  }
+
+  class HysteresisPacing {
+    +isEnabled: boolean
+    +activate()
+  }
+
+  class PVCResponse {
+  }
+  
+  Pacemaker "1" -- "1" AtrialTachycardiaResponse: uses
+  Pacemaker "1" -- "1" Accelerometer: uses
+  Pacemaker "1" -- "1" RateSmoothing: uses
+  Pacemaker "1" -- "1" HysteresisPacing: uses
+  Pacemaker "1" -- "1" PVCResponse: uses
+}
+
+DCM "1" -- "1" Pacemaker: communicatesWith
+Pacemaker "1" -- "1" BradycardiaMode: operatesIn
+Pacemaker "1" -- "1" PacingState: uses
+DCM "1" -- "0..*" DiagnosticTool: uses
+@enduml

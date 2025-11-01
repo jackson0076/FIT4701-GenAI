@@ -1,0 +1,249 @@
+@startuml
+!pragma layout smetana
+
+package "User Management" {
+  class User {
+    +userId: String
+    +email: String
+    +passwordHash: String
+    +profile: UserProfile
+    +lastLogin: DateTime
+    +getTransactions(): List<Transaction>
+    +getFavorites(): List<RecyclingFacility>
+    +setSchedule(schedule: WeekSchedule): void
+    +linkEmail(email: String): void
+    +viewMap(): void
+    +contactAdmin(message: String): void
+    +requestPasswordReset(): void
+  }
+
+  class UserProfile {
+    +firstName: String
+    +lastName: String
+    +zipCode: String
+    +notificationsEnabled: Boolean
+  }
+
+  enum UserRole {
+    USER
+    ADMIN
+    SUPERUSER
+    RECYCLING_FACILITY_REP
+    EMPLOYEE
+    HR
+    ACCOUNTANT
+    DEVELOPER
+    EXECUTIVE
+  }
+
+  User "1" -- "1" UserProfile
+}
+
+package "Admin & Company" {
+  abstract class Admin {
+    +adminId: String
+    +viewUserFeedback(): List<Feedback>
+    +viewUserErrorLogs(): List<ErrorLog>
+    +onboardRecyclingCenter(info: RecyclingCenterInfo): void
+    +updateFacilityInfo(facilityId: String, info: RecyclingCenterInfo): void
+    +viewUsageStats(): UsageStats
+    +communicateWithFacilities(message: String): void
+    +monitorSiteStatus(): DashboardData
+    +blockUser(ipAddress: String): void
+  }
+
+  class SystemAdmin extends Admin {
+    +manageUsers(): void
+    +getSystemData(dataType: String): EncryptedData
+  }
+
+  class RecyclingFacilityRep extends User {
+    +updateFacilityInfo(info: RecyclingFacilityInfo): void
+    +viewUserStats(): UserStats
+    +replyToUserQuestion(question: UserQuestion, answer: String): void
+    +adjustHours(newHours: List<OperatingHours>): void
+    +conveyIssueToAdmin(issue: String): void
+  }
+}
+
+package "Data & Content" {
+  class RecyclingFacility {
+    +facilityId: String
+    +name: String
+    +address: Address
+    +contactInfo: ContactInfo
+    +openingHours: List<OpeningHours>
+    +acceptedWasteTypes: List<WasteType>
+    +isEnvironmentFriendly: Boolean
+    +addAcceptedWasteType(wasteType: WasteType): void
+  }
+
+  class RecyclingCenterInfo {
+    +name: String
+    +address: Address
+    +hours: String
+    +acceptedWaste: List<WasteType>
+  }
+
+  class PublicBin {
+    +binId: String
+    +location: Address
+    +wasteType: WasteType
+  }
+
+  class SpecialWasteSite {
+    +siteId: String
+    +name: String
+    +location: Address
+    +acceptedMaterials: List<WasteType>
+  }
+
+  class Event {
+    +eventId: String
+    +name: String
+    +location: Address
+    +date: Date
+    +description: String
+  }
+
+  class WasteType {
+    +type: String
+  }
+
+  class Address {
+    +street: String
+    +city: String
+    +state: String
+    +zipCode: String
+    +latitude: double
+    +longitude: double
+  }
+
+  class OperatingHours {
+    +dayOfWeek: String
+    +openTime: Time
+    +closeTime: Time
+  }
+
+  class Transaction {
+    +transactionId: String
+    +date: DateTime
+    +amount: double
+    +description: String
+  }
+
+  class Feedback {
+    +feedbackId: String
+    +userId: String
+    +message: String
+    +date: DateTime
+  }
+
+  class ErrorLog {
+    +logId: String
+    +timestamp: DateTime
+    +userId: String
+    +message: String
+  }
+
+  class UserQuestion {
+    +questionId: String
+    +userId: String
+    +facilityId: String
+    +questionText: String
+  }
+
+  class UserStats {
+    +facilityId: String
+    +visitors: Integer
+    +wasteStats: WasteStats
+  }
+
+  class WasteStats {
+    +wasteType: WasteType
+    +quantity: Double
+  }
+
+  RecyclingFacility "1" -- "0..*" WasteType : accepts
+  User "1" -- "0..*" RecyclingFacility : favorite
+}
+
+package "Core System" {
+  class MapService {
+    +viewMap(entity: String, location: Address): void
+    +getDirections(from: Address, to: Address): Route
+  }
+
+  class Route {
+    +distance: double
+    +duration: double
+    +path: List<Point>
+  }
+
+  class SearchService {
+    +searchByZipCode(zipCode: String): List<RecyclingFacility>
+    +searchByWasteType(wasteType: WasteType): List<RecyclingFacility>
+  }
+
+  class NotificationService {
+    +sendEmail(email: String, message: String): void
+    +sendNotification(userId: String, message: String): void
+  }
+
+  class RewardsService {
+    +issueReward(userId: String, reward: Reward): void
+  }
+
+  class Reward {
+    +rewardId: String
+    +description: String
+    +value: String
+  }
+
+  class SecurityService {
+    +encryptData(data: String): EncryptedData
+    +securePersonalInfo(info: PersonalInfo): EncryptedData
+    +blockIpAddress(ipAddress: String): void
+  }
+
+  class EncryptedData {
+    +data: String
+  }
+
+  class Database {
+    +storeUserData(user: User): void
+    +retrieveUserData(userId: String): User
+  }
+}
+
+User "1" --> "1" UserProfile : manages
+User "0..*" -- "1" RecyclingFacility : schedules pickup
+User "0..*" -- "0..*" Event : attends
+User "0..*" -- "0..*" RecyclingFacility : favorites
+User "1" -- "0..*" Transaction : generates
+User "1" -- "0..*" Feedback : provides
+User "1" -- "0..*" ErrorLog : reports
+User "1" -- "0..*" UserQuestion : asks
+User "1" ..> SearchService : uses
+User "1" ..> MapService : uses
+User "1" ..> NotificationService : receives
+User "1" ..> SecurityService : uses
+
+Admin "1" -- "0..*" RecyclingFacility : manages
+Admin "1" -- "0..*" Feedback : reads
+Admin "1" -- "0..*" ErrorLog : views
+Admin "1" -- "0..*" UserQuestion : replies
+Admin "1" -- "0..*" User : manages
+Admin "1" ..> SystemAdmin : supervises
+Admin "1" ..> NotificationService : sends
+
+RecyclingFacility "1" -- "1" RecyclingFacilityRep : represented by
+RecyclingFacilityRep "1" --> "1" RecyclingFacility : updates info of
+RecyclingFacilityRep "1" ..> Admin : communicates with
+
+MapService "1" --> "0..*" RecyclingFacility : displays
+MapService "1" --> "0..*" PublicBin : displays
+MapService "1" --> "0..*" SpecialWasteSite : displays
+MapService "1" --> "0..*" Event : displays
+
+@enduml

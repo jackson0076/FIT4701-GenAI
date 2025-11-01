@@ -1,0 +1,70 @@
+@startuml
+
+package "autopilot" {
+  class Autopilot {
+    +state : State 
+    +pilot_controlled : boolean 
+    +system_supported : boolean 
+    -request_support() : void 
+    -report_active_mode() : void 
+  }
+  
+  enum State {
+    TRANSITION
+    STANDBY
+    NOMINAL
+    MANEUVER
+    PULLUP
+  }
+
+  class Autopilot_Pullup extends Autopilot {}
+}
+
+package "sensor" {
+  class Sensor {
+    +limits_exceeded : boolean 
+    -exceed_limits() : void 
+    -request_support() : void 
+    -report_active_mode() : void 
+    -report_sensor_data() : void 
+  }
+
+  enum Fault_Status {
+    NOMINAL
+    FAULT
+    TRANSITION
+  }
+}
+
+package "system" {
+  class System {
+    +supported : boolean 
+    -fail_system() : void 
+    -support_system() : void 
+  }
+}
+
+Autopilot --> "1..*" Sensor 
+Sensor --> "0..* " Autopilot 
+
+class Autopilot_Pullup {
+  -autopilot_pullup()
+}
+
+class Sensor_Fault extends Sensor {}
+Sensor_Fault --|> Autopilot
+
+class System_Fail extends System {}
+System_Fail --|> Autopilot
+Autopilot --> "1" System_Fail
+
+package "events" {
+  class Event {
+    +source : String 
+    -trigger() : void 
+  }
+}
+
+Event --|> Autopilot 
+
+@enduml

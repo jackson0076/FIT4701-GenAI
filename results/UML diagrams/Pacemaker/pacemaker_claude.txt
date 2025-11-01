@@ -1,0 +1,348 @@
+@startuml
+
+package "device" {
+    class PacemakerDevice {
+        - modelNumber: String
+        - serialNumber: String
+        - implantDate: Date
+        + paceSingleChamber(): void
+        + paceDualChamber(): void
+        + setMode(mode: PacingMode): void
+        + getBatteryStatus(): BatteryStatus
+        + storeMeasuredData(data: MeasuredData): void
+    }
+
+    enum PacingMode {
+        OFF, DDDR, VDDR, DDIR, DOOR, VOOR, AOOR, VVIR, AAIR, DDD, VDD, DDI, DOO, VOO, AOO, VVI, AAI, VVT, AAT, OVO, OAO, ODO, OOO
+    }
+
+    enum BradycardiaState {
+        PERMANENT, TEMPORARY, PACE_NOW, MAGNET, POWER_ON_RESET
+    }
+
+    enum BatteryStatus {
+        BOL, ERN, ERT, ERP
+    }
+
+    class PulseGenerator {
+        - atrialAmplitude: Double
+        - ventricularAmplitude: Double
+        - atrialPulseWidth: Double
+        - ventricularPulseWidth: Double
+        - lowerRateLimit: Integer
+        - upperRateLimit: Integer
+        + generatePulse(chamber: Chamber, amplitude: Double, width: Double): void
+        + detectMagnet(): Boolean
+        + enterPowerOnReset(): void
+    }
+
+    enum Chamber {
+        ATRIAL, VENTRICULAR
+    }
+
+    class LeadSystem {
+        - impedance: Double
+        - implantDate: Date
+        - polarity: String
+        + measureImpedance(): Double
+        + sense(): Double
+        + pace(amplitude: Double, width: Double): void
+    }
+
+    class AtrialLead {
+        - pacingThreshold: Double
+        - pWaveAmplitude: Double
+        + measurePWave(): Double
+    }
+
+    class VentricularLead {
+        - pacingThreshold: Double
+        - rWaveAmplitude: Double
+        + measureRWave(): Double
+    }
+
+    class SensorSystem {
+        - activityThreshold: Double
+        - responseFactor: Integer
+        - maxSensorRate: Integer
+        - recoveryTime: Integer
+        + detectActivity(): Double
+        + calculateRate(): Integer
+    }
+
+    class Accelerometer {
+        + measureActivity(): Double
+        + determineRateIncrease(): Double
+        + determineRateDecrease(): Double
+    }
+
+    PacemakerDevice --> "1" PulseGenerator
+    PacemakerDevice --> "1" SensorSystem
+    PacemakerDevice --> "1..2" LeadSystem
+    SensorSystem --> "1" Accelerometer
+    LeadSystem <|-- AtrialLead
+    LeadSystem <|-- VentricularLead
+    PacemakerDevice ..> PacingMode
+    PacemakerDevice ..> BradycardiaState
+    PacemakerDevice ..> BatteryStatus
+}
+
+package "dcm" {
+    class DCM {
+        - serialNumber: String
+        - modelNumber: String
+        - version: String
+        + interrogateDevice(): void
+        + programParameters(): void
+        + displayRealTimeData(): void
+        + printReport(): void
+    }
+
+    class UserInterface {
+        + displayWindows(): void
+        + processUserInput(): void
+        + showCommunicationStatus(): void
+        + indicateTelemetryLoss(): void
+        + showDeviceChange(): void
+    }
+
+    abstract class Window {
+        - isVisible: Boolean
+        + display(): void
+        + hide(): void
+    }
+
+    class TextWindow {
+        - content: String
+        + displayText(): void
+    }
+
+    class GraphicsWindow {
+        - graphData: Object
+        + displayGraphics(): void
+    }
+
+    class InputHandler {
+        + processButtonInput(): void
+        + processPositioning(): void
+    }
+
+    class DisplayManager {
+        - gain: Double
+        - filtering: Boolean
+        + setGain(gain: Double): void
+        + toggleFiltering(): void
+        + displayECG(): void
+        + displayEGM(): void
+    }
+
+    class StripChartRecorder {
+        + printRealTimeData(): void
+        + printMultipleTraces(): void
+    }
+
+    DCM --> "1" UserInterface
+    DCM --> "1" DisplayManager
+    DCM --> "1" StripChartRecorder
+    UserInterface --> "0..*" Window
+    UserInterface --> "1" InputHandler
+    Window <|-- TextWindow
+    Window <|-- GraphicsWindow
+}
+
+package "communication" {
+    class TelemetrySystem {
+        - range: Double
+        + establishConnection(): Boolean
+        + sendCommand(command: String): void
+        + receiveData(): Object
+        + detectConnectionLoss(): Boolean
+    }
+
+    class InductiveWand {
+        - operatingRange: Double
+        + maintainConnection(): Boolean
+        + detectDevice(): Boolean
+    }
+
+    class RFCommunication {
+        + transmitData(): void
+        + receiveData(): Object
+    }
+
+    TelemetrySystem --> "1" InductiveWand
+    TelemetrySystem --> "0..1" RFCommunication
+    DCM --> "1" TelemetrySystem
+    TelemetrySystem --> "1" PacemakerDevice
+}
+
+package "reports" {
+    abstract class Report {
+        - institutionName: String
+        - printDate: Date
+        - deviceModel: String
+        - deviceSerial: String
+        - dcmSerial: String
+        - applicationVersion: String
+        - reportName: String
+        + generateReport(): String
+        + printReport(): void
+    }
+
+    class BradycardiaParametersReport {
+        + generateBradycardiaData(): String
+    }
+
+    class TemporaryParametersReport {
+        + generateTemporaryData(): String
+    }
+
+    class ImplantDataReport {
+        + generateImplantData(): String
+    }
+
+    class ThresholdTestResultsReport {
+        + generateThresholdData(): String
+    }
+
+    class MeasuredDataReport {
+        + generateMeasuredData(): String
+    }
+
+    class MarkerLegendReport {
+        + generateMarkerData(): String
+    }
+
+    class SessionNetChangeReport {
+        + generateNetChangeData(): String
+    }
+
+    class FinalReport {
+        + combineMultipleReports(): String
+    }
+
+    class RateHistogramReport {
+        + generateHistogramData(): String
+    }
+
+    class TrendingReport {
+        + generateTrendingData(): String
+    }
+
+    Report <|-- BradycardiaParametersReport
+    Report <|-- TemporaryParametersReport
+    Report <|-- ImplantDataReport
+    Report <|-- ThresholdTestResultsReport
+    Report <|-- MeasuredDataReport
+    Report <|-- MarkerLegendReport
+    Report <|-- SessionNetChangeReport
+    Report <|-- FinalReport
+    Report <|-- RateHistogramReport
+    Report <|-- TrendingReport
+
+    DCM --> "0..*" Report
+}
+
+package "diagnostics" {
+    class DiagnosticTool {
+        + performDiagnostic(): Object
+    }
+
+    class MeasuredDataTool {
+        + measurePWave(): Double
+        + measureRWave(): Double
+        + measureLeadImpedance(): Double
+    }
+
+    class ThresholdTestTool {
+        - backupMode: PacingMode
+        - backupRate: Integer
+        + performAutomaticTest(): Object
+        + testPulseWidth(): Double
+        + testAmplitude(): Double
+    }
+
+    class RateHistogramTool {
+        - recordingPeriod: Date
+        + recordAtrialEvents(): void
+        + recordVentricularEvents(): void
+        + resetHistograms(): void
+    }
+
+    class TrendingTool {
+        - recordingDuration: Integer
+        - storageMethod: String
+        + recordPacingRate(): void
+        + recordSensorData(): void
+    }
+
+    class RealTimeDataTool {
+        + displayECG(): void
+        + displayEGM(): void
+        + displayEventMarkers(): void
+    }
+
+    DiagnosticTool <|-- MeasuredDataTool
+    DiagnosticTool <|-- ThresholdTestTool
+    DiagnosticTool <|-- RateHistogramTool
+    DiagnosticTool <|-- TrendingTool
+    DiagnosticTool <|-- RealTimeDataTool
+
+    DCM --> "0..*" DiagnosticTool
+    PacemakerDevice --> "0..*" DiagnosticTool
+}
+
+package "functions" {
+    class SystemFunction {
+        + execute(): void
+    }
+
+    class SetClockFunction {
+        + setDateTime(date: Date): void
+    }
+
+    class NewPatientFunction {
+        + startNewSession(): void
+    }
+
+    class QuitFunction {
+        + endTelemetrySession(): void
+    }
+
+    class AboutFunction {
+        + displayApplicationInfo(): String
+    }
+
+    SystemFunction <|-- SetClockFunction
+    SystemFunction <|-- NewPatientFunction
+    SystemFunction <|-- QuitFunction
+    SystemFunction <|-- AboutFunction
+
+    DCM --> "0..*" SystemFunction
+}
+
+package "parameters" {
+    class PacingParameters {
+        - avDelay: Integer
+        - ventricularRefractoryPeriod: Integer
+        - atrialRefractoryPeriod: Integer
+        - pvarp: Integer
+        - hysteresisRateLimit: Integer
+        + setPacedAVDelay(delay: Integer): void
+        + setSensedAVDelay(delay: Integer): void
+        + enableRateSmoothing(): void
+    }
+
+    class ATRParameters {
+        - durationDelay: Integer
+        - fallbackMode: PacingMode
+        + detectATOnset(): Boolean
+        + detectATCessation(): Boolean
+        + enterFallback(): void
+    }
+
+    PacemakerDevice --> "1" PacingParameters
+    PacemakerDevice --> "0..1" ATRParameters
+}
+
+@enduml

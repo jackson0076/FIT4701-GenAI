@@ -1,0 +1,130 @@
+@startuml
+
+package "users" {
+    abstract User {
+        -String userId
+        -String name
+        -String email
+        -String password
+        +boolean authenticate(String password)
+        +void updateProfile(String name, String email)
+    }
+
+    interface UHOPEEmployee {
+        +String getEmployeeId()
+        +String getDepartment()
+    }
+
+    class Patient {
+        -String patientId
+        -String phoneNumber
+        -String address
+        -Date dateOfBirth
+        +MedicalRecord getMedicalRecord()
+        +List<TestResult> getTestResults()
+        +List<Treatment> getTreatments()
+    }
+
+    class Doctor {
+        -String doctorId
+        -String specialization
+        -String department
+        +void createAppointment(Patient patient, Date date)
+        +void editMedicalRecord(MedicalRecord record)
+        +void addTreatment(Patient patient, Treatment treatment)
+        +boolean canAccessPatient(Patient patient)
+    }
+
+    class Receptionist {
+        -String receptionistId
+        -String department
+        +Patient searchPatient(String criteria)
+        +void editPatientInfo(Patient patient)
+        +MedicalRecord viewMedicalFile(Patient patient)
+        +void scheduleAppointment(Patient patient, Doctor doctor, Date date)
+    }
+
+    Patient --|> User
+    Doctor --|> User
+    Receptionist --|> User
+    Doctor ..|> UHOPEEmployee
+    Receptionist ..|> UHOPEEmployee
+}
+
+package "medical" {
+    class MedicalRecord {
+        -String recordId
+        -String patientId
+        -Date createdDate
+        -Date lastModified
+        -String medicalHistory
+        +void updateHistory(String history)
+        +boolean canBeAccessedBy(User user)
+        +List<Treatment> getTreatments()
+        +List<TestResult> getTestResults()
+    }
+
+    class Appointment {
+        -String appointmentId
+        -Date appointmentDate
+        -String notes
+        -String status
+        +void updateNotes(String notes)
+        +void setStatus(String status)
+    }
+
+    class TestResult {
+        -String testId
+        -String testType
+        -Date testDate
+        -String results
+        -String doctorNotes
+        +String getResults()
+        +void addDoctorNotes(String notes)
+    }
+
+    class Treatment {
+        -String treatmentId
+        -String treatmentType
+        -Date treatmentDate
+        -String description
+        -String medication
+        +void updateDescription(String description)
+        +void addMedication(String medication)
+    }
+}
+
+package "system" {
+    class EMRDatabase {
+        +MedicalRecord findMedicalRecord(String patientId)
+        +void saveMedicalRecord(MedicalRecord record)
+        +List<Patient> searchPatients(String criteria)
+        +void syncWithNationalDatabase()
+    }
+
+    class NationalMedicalDatabase {
+        +MedicalRecord getMedicalRecord(String patientId)
+        +boolean patientExists(String patientId)
+    }
+
+    class AccessControl {
+        +boolean canAccess(User user, MedicalRecord record)
+        +boolean canEdit(User user, MedicalRecord record)
+        +void logAccess(User user, String resource)
+    }
+}
+
+Patient "1" -- "1" MedicalRecord : owns
+Doctor "1" -- "0..*" Patient : treats
+Doctor "1" -- "0..*" Appointment : conducts
+Patient "1" -- "0..*" Appointment : attends
+MedicalRecord "1" -- "0..*" TestResult : contains
+MedicalRecord "1" -- "0..*" Treatment : includes
+TestResult "*" -- "1" Doctor : ordered_by
+Treatment "*" -- "1" Doctor : prescribed_by
+EMRDatabase "1" -- "*" MedicalRecord : stores
+EMRDatabase "1" -- "1" NationalMedicalDatabase : syncs_with
+AccessControl "1" -- "*" User : manages
+AccessControl "1" -- "*" MedicalRecord : protects
+
+@enduml

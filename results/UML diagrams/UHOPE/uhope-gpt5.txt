@@ -1,0 +1,216 @@
+@startuml
+
+' =======================
+' Packages
+' =======================
+
+package "actors" {
+  abstract class User {
+    - id: UUID
+    - passwordHash: String
+    + name: String
+    + email: String
+    + authenticate(password: String): boolean
+    + getId(): UUID
+  }
+
+  abstract class Employee {
+    + employeeId: String
+    + department: Department
+    + roles: Set<RoleType>
+    + listAccessiblePatients(): List<Patient>
+  }
+
+  class Doctor {
+    + licenseNumber: String
+    + assignAsPrimaryDoctor(patient: Patient): void
+    + enterAppointment(patientId: UUID, dateTime: DateTime, reason: String): records.Appointment
+    + editMedicalRecord(record: records.MedicalRecord, updateNote: String): boolean
+    + viewPatientRecord(patient: Patient): records.MedicalRecord
+  }
+
+  class Receptionist {
+    + searchPatient(query: String): List<Patient>
+    + viewMedicalFileForConfirmation(patient: Patient): records.MedicalRecord
+    + editPatientFile(patient: Patient, updates: String): boolean
+  }
+
+  class Patient {
+    - nationalId: String
+    + dob: Date
+    + gender: Gender
+    + viewOwnRecord(): records.MedicalRecord
+    + listTestResults(): List<records.TestResult>
+    + listTreatments(): List<records.Treatment>
+  }
+
+  class Department {
+    + name: String
+    + code: String
+  }
+
+  enum Gender {
+    MALE
+    FEMALE
+    NON_BINARY
+    UNSPECIFIED
+  }
+
+  enum RoleType {
+    EMPLOYEE
+    DOCTOR
+    RECEPTIONIST
+    ADMIN
+  }
+
+  Employee --|> User
+  Doctor --|> Employee
+  Receptionist --|> Employee
+  Patient --|> User
+
+  Department "1" <-- "0..*" Employee : belongsTo
+}
+
+package "records" {
+  class MedicalRecord {
+    + recordId: UUID
+    + patientId: UUID
+    + createdAt: DateTime
+    + updatedAt: DateTime
+    + getSummary(): String
+    + addHistory(entry: MedicalHistoryEntry): void
+    + addTestResult(result: TestResult): void
+    + addTreatment(treatment: Treatment): void
+  }
+
+  class MedicalHistoryEntry {
+    + entryId: UUID
+    + description: String
+    + date: Date
+  }
+
+  class TestResult {
+    + resultId: UUID
+    + testType: TestType
+    + performedOn: Date
+    + result: String
+    + enteredBy: actors.Employee
+    + view(): String
+  }
+
+  class Treatment {
+    + treatmentId: UUID
+    + treatmentType: TreatmentType
+    + date: Date
+    + notes: String
+    + administeredBy: actors.Doctor
+    + isVaccine(): boolean
+  }
+
+  class Appointment {
+    + appointmentId: UUID
+    + dateTime: DateTime
+    + reason: String
+    + doctor: actors.Doctor
+    + patient: actors.Patient
+    + notes: String
+    + enterNotes(notes: String): void
+    + getSummary(): String
+  }
+
+  enum TestType {
+    BLOOD
+    XRAY
+    MRI
+    ULTRASOUND
+    OTHER
+  }
+
+  enum TreatmentType {
+    VACCINATION
+    MEDICATION
+    SURGERY
+    THERAPY
+    OTHER
+  }
+
+  ' Containment within a medical record
+  MedicalRecord "1" *-- "0..*" MedicalHistoryEntry : history
+  MedicalRecord "1" *-- "0..*" TestResult : results
+  MedicalRecord "1" *-- "0..*" Treatment : treatments
+}
+
+package "services" {
+  class ElectronicMedicalRecordSystem {
+    + registerPatient(patient: actors.Patient): UUID
+    + updatePatient(patient: actors.Patient): boolean
+    + getRecordByPatientId(patientId: UUID): records.MedicalRecord
+    + searchPatients(query: String): List<actors.Patient>
+    + recordAppointment(appointment: records.Appointment): void
+    + authorizeAccess(user: actors.User, record: records.MedicalRecord, action: Action): boolean
+    + importRecordFromNationalDB(nationalPatientId: String): records.MedicalRecord
+  }
+
+  class AccessControlService {
+    + canView(user: actors.User, record: records.MedicalRecord): boolean
+    + canEdit(user: actors.User, record: records.MedicalRecord): boolean
+    + assignDoctorToPatient(doctor: actors.Doctor, patient: actors.Patient): void
+    + isPatientOf(doctor: actors.Doctor, patient: actors.Patient): boolean
+  }
+
+  enum AccessScope {
+    SELF
+    ASSIGNED_PATIENTS
+    DEPARTMENT
+    ORGANIZATION
+  }
+
+  enum Action {
+    VIEW
+    EDIT
+    CREATE_APPOINTMENT
+    IMPORT
+  }
+
+  ElectronicMedicalRecordSystem ..> AccessControlService : uses
+}
+
+package "integration" {
+  interface NationalMedicalRecordsGateway {
+    + fetchMedicalRecord(nationalPatientId: String): records.MedicalRecord
+    + findPatient(nationalPatientId: String): actors.Patient
+  }
+
+  class NationalDatabaseAdapter {
+    + endpointUrl: String
+    + fetchMedicalRecord(nationalPatientId: String): records.MedicalRecord
+    + findPatient(nationalPatientId: String): actors.Patient
+  }
+
+  NationalDatabaseAdapter ..|> NationalMedicalRecordsGateway
+}
+
+' =======================
+' Cross-package associations & constraints
+' =======================
+
+' One patient has exactly one medical record within the EMR
+actors.Patient "1" *-- "1" records.MedicalRecord : record
+
+' Doctor-patient assignment (primary doctor)
+actors.Doctor "0..*" -- "0..1" actors.Patient : primaryDoctor
+
+' Appointments involve a doctor and a patient
+actors.Doctor "1" o-- "0..*" records.Appointment : appointments
+actors.Patient "1" o-- "0..*" records.Appointment : appointments
+
+' Provenance of clinical data
+actors.Employee "1" <-- "0..*" records.TestResult : enteredBy
+actors.Doctor "1" <-- "0..*" records.Treatment : administeredBy
+
+' EMR system manages core aggregates and integrates externally
+services.ElectronicMedicalRecordSystem "1" --> "0..*" actors.Patient : manages >
+services.ElectronicMedicalRecordSystem "1" --> "0..*" records.MedicalRecord : manages >
+services.ElectronicMedicalRecordSystem ..> integration.NationalMedicalRecordsGateway : integrates >
+
+@enduml
