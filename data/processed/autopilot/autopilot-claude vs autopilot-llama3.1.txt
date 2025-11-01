@@ -1,0 +1,278 @@
+
+    Role: You are a strict evaluator of UML class diagrams written in PlantUML. Compare two candidate diagrams (A and B) against the given Context.
+    Context:
+    1. Roll Autopilot shall engage when the pilot selects the autopilot engage switch in the cockpit and disengage when the switch is deselected. When not engaged, the command to the roll actuator shall be zero.
+2. Roll hold mode shall be the active mode whenever the autopilot is engaged and no other lateral mode is active.
+3. When roll hold mode becomes the active mode the roll hold reference shall be set to the actual roll attitude of the aircraft, except under the following conditions:
+4. The roll hold reference shall be set to zero if the actual roll angle is less than 6 degrees, in either direction, at the time of roll hold engagement.
+5. The roll hold reference shall be set to 30 degrees in the same direction as the actual roll angle if the actual roll angle is greater than 30 degrees at the time of roll hold engagement.
+6. The roll reference shall be set to the cockpit turn knob command, up to a 30 degree limit, if the turn knob is commanding 3 degrees or more in either direction.
+7. Steady state roll commands shall be tracked within 1 degree in calm air.
+8. Response to roll step commands shall not exceed 10% overshoot in calm air.
+9. Small signal (<3 degree) roll bandwidth shall be at least 0.5 rad/sec.
+10.The maximum roll rate for large commands shall be 6 deg/sec +/-10% in calm air.
+11.The maximum roll angle allowed shall be 30 deg +/-10% in calm air.
+12. The maximum aileron command allowed shall be 15 deg.
+13. Heading Hold shall become the active mode when the pilot selects the heading switch in the cockpit and deactivate when the switch is deselected.
+14. When heading hold mode becomes the active mode the heading hold reference shall be set by the pilot via a cockpit control.
+
+
+
+
+
+
+
+    
+    PlantUML result A: 
+    @startuml
+package "control" {
+    class Autopilot {
+        -isEngaged: boolean
+        -activeMode: FlightMode
+        +engage(): void
+        +disengage(): void
+        +setActiveMode(mode: FlightMode): void
+        +getActiveMode(): FlightMode
+        +isEngaged(): boolean
+        +update(): void
+    }
+    
+    abstract class FlightMode {
+        #isActive: boolean
+        +activate(): void
+        +deactivate(): void
+        +isActive(): boolean
+        +abstract computeCommand(): double
+        +abstract update(): void
+    }
+    
+    class RollHoldMode {
+        -rollReference: double
+        -maxRollAngle: double
+        -maxRollRate: double
+        -trackingTolerance: double
+        -overshootLimit: double
+        -bandwidth: double
+        +setRollReference(angle: double): void
+        +getRollReference(): double
+        +computeCommand(): double
+        +update(): void
+        -applyRollLimits(angle: double): double
+    }
+    
+    class HeadingHoldMode {
+        -headingReference: double
+        +setHeadingReference(heading: double): void
+        +getHeadingReference(): double
+        +computeCommand(): double
+        +update(): void
+    }
+}
+
+package "aircraft" {
+    class Aircraft {
+        -rollAngle: double
+        -heading: double
+        -rollRate: double
+        +getRollAngle(): double
+        +getHeading(): double
+        +getRollRate(): double
+        +update(): void
+    }
+    
+    class RollActuator {
+        -command: double
+        -maxAileronCommand: double
+        +setCommand(cmd: double): void
+        +getCommand(): double
+        +execute(): void
+        -limitCommand(cmd: double): double
+    }
+}
+
+package "cockpit" {
+    class CockpitControls {
+        -autopilotSwitch: boolean
+        -headingSwitch: boolean
+        -turnKnobCommand: double
+        -headingKnobCommand: double
+        +isAutopilotEngaged(): boolean
+        +isHeadingModeSelected(): boolean
+        +getTurnKnobCommand(): double
+        +getHeadingKnobCommand(): double
+        +update(): void
+    }
+}
+
+package "modes" {
+    enum ModeType {
+        ROLL_HOLD
+        HEADING_HOLD
+        NONE
+    }
+}
+
+' Relationships
+Autopilot --> "1" Aircraft : monitors
+Autopilot --> "1" CockpitControls : reads
+Autopilot --> "1" RollActuator : commands
+Autopilot --> "0..*" FlightMode : manages
+RollHoldMode --|> FlightMode
+HeadingHoldMode --|> FlightMode
+RollHoldMode --> "1" Aircraft : reads state
+HeadingHoldMode --> "1" Aircraft : reads state
+FlightMode --> "1" RollActuator : outputs to
+Autopilot --> "1" ModeType : tracks active mode
+@enduml
+    
+    PlantUML result B: 
+    @startuml
+package "autopilot" {
+    class Autopilot {
+        +rollActuatorCommand(): double
+        +engage() : void
+        +disengage() : void
+    }
+    
+    class RollHoldMode {
+        +active: boolean
+        +rollHoldReference: double
+        
+        +engage() : void
+        -setRollHoldReference(double) : void
+    }
+    
+    class HeadingHoldMode {
+        +active: boolean
+        +headingHoldReference: double
+        
+        +engage() : void
+        -setHeadingHoldReference(double) : void
+    }
+    
+    Autopilot --> "*" RollHoldMode
+    Autopilot --> "*" HeadingHoldMode
+    
+    package "modes" {
+        class RollHoldMode --> "1..*" RollCommand
+        class RollHoldMode --> "0..*" RollHoldReferenceSetting
+        
+        class HeadingHoldMode --> "0..*" HeadingHoldReferenceSetting
+    }
+}
+
+package "controls" {
+    class Cockpit {
+        +engageAutopilotSwitch() : void
+        +disengageAutopilotSwitch() : void
+        +turnKnobCommand(): double
+    }
+    
+    class Pilot {
+        +selectHeadingSwitch() : void
+        +deselectHeadingSwitch() : void
+    }
+}
+
+package "actuators" {
+    class RollActuator {
+        -command(double) : void
+    }
+}
+
+package "sensors" {
+    class AircraftAttitudeSensor {
+        +actualRollAngle(): double
+    }
+}
+
+Autopilot --> "1" Cockpit
+Cockpit --> "*" Autopilot
+    
+Pilot --> "1..*" HeadingHoldMode
+HeadingHoldMode --> "1" Pilot
+
+AircraftAttitudeSensor --> "1" RollHoldMode
+RollActuator --> "1" Autopilot
+
+interface CommandTracker {
+    -trackCommand(double) : void
+}
+
+class SteadyStateRollCommandTracker implements CommandTracker {
+    -trackCommand(double) : void
+}
+
+class StepRollCommandTracker implements CommandTracker {
+    -trackCommand(double) : void
+}
+
+Autopilot --> "1" CommandTracker
+    
+enum BandwidthType { SMALL_SIGNAL, LARGE_COMMAND }
+enum OvershootLimit { CALM_AIR_10, DEFAULT }
+
+@enduml
+
+
+Evaluation rules:
+- Consider only UML class diagram semantics (eg. classes, attributes, associations, multiplicities, generalisation, composition/aggregation). 
+- Ignore layout, styling, skinparams, comments, and notes. 
+- Treat the Context as authoritative; do not invent entities or relationships not present there.
+
+Decision criteria (in priority order):
+1. Correct domain classes and relationships
+2. Correct associations/multiplicities
+3. Appropriate attributes and types
+4. Terminology alignment
+5. UML class diagram conformance
+
+Evaluation Scores:
+Assign a score from 1-5 for each criterion when comparing and evaluating the two models. The scoring must strictly adhere to the metrics below, while following the evaluation rules and decision criteria.
+
+
+
+Evaluation Metrics:
+
+1. Appropriate conceptual classes aligned with the domain
+
+1 - Very Poor: Classes are mostly incorrect or irrelevant and do not accurately represent the domain.
+2 - Poor: Only a few classes are correct, but the majority of the domain concepts are missing or incorrect. 
+3 - Fair: Some classes are correctly identified, but noticeable misalignments are still present.
+4 - Good: Most classes are correctly identified with only minor misalignments
+5 - Excellent: All classes are correctly identified, fully aligned with the domain. 
+
+2. Associations/Multiplicities between classes for domain reasoning 
+1 - Very Poor: Associations/multiplicities are largely missing or incorrect, comprising domain reasoning. 
+2 - Poor: Few correct associations/multiplicities with critical relationships missing. 
+3 - Fair: Some associations/multiplicities are correct, but noticeable missing or misrepresentations remain. 
+4 - Good: Most associations/multiplicities are correctly identified with only minor errors. 
+5 - Excellent: All essential associations/multiplicities correctly applied.
+
+3. Model attributes with appropriate data types
+1 - Very Poor: Attributes and data types are poorly identified and modeled; largely incorrect or irrelevant.
+2 -  Poor: Few attributes are correct with proper types; critical attributes are missing.
+3 - Fair: Some attributes are correct with proper types, but significant attributes are still missing.
+4 - Good: Most attributes are appropriately modeled with proper data types; minor type issues may exist.
+5 - Excellent: All attributes are correctly modeled with appropriate data types.
+
+4. Consistencies of Terminology with given context
+1 - Very Poor: Terminology is largely inconsistent with the given context 
+2 - Poor: Frequent inconsistencies; critical terms misused or missing. 
+3 - Fair: Some terminology is correct, but noticeable inconsistencies remain. 
+4 - Good: Most terminology aligns with the given context, with minor inconsistencies. 
+5 - Excellent: Terminology is fully consistent with the given context. 
+
+5. Adherence of UML class diagram standards 
+1 – Very Poor: Poor diagram formation with major UML standards ignored, making it largely incomprehensible.
+2 – Poor: Frequent UML violations; diagram is difficult to interpret.
+3 – Fair: Some UML/PlantUML syntax errors, but major representations are still missing. 
+4 – Good: Minor UML/PlantUML notation errors; overall diagram remains understandable.
+5 – Excellent: Fully adheres to UML/PlantUML syntax, notation, and conventions.
+
+
+Return only:
+Winner: A | B 
+Justification: 2–4 concise sentences citing concrete elements from A and B, and includes the scores assigned to the 5 criteria listed above.
+
+    

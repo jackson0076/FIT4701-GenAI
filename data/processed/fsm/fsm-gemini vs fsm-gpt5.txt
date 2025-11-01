@@ -1,0 +1,240 @@
+
+    Role: You are a strict evaluator of UML class diagrams written in PlantUML. Compare two candidate diagrams (A and B) against the given Context.
+    Context:
+    1.	Exceeding sensor limits shall latch an autopilot pullup when the pilot is not in control (not standby) and the system is supported without failures (not apfail).   
+2.	The autopilot shall change states from TRANSITION to STANDBY when the pilot is in control (standby).
+3.	The autopilot shall change states from TRANSITION to NOMINAL when the system is supported and sensor data is good.
+4.	The autopilot shall change states from NOMINAL to MANEUVER when the sensor data is not good.
+5.	The autopilot shall change states from NOMINAL to STANDBY when the pilot is in control (standby).
+6.	The autopilot shall change states from MANEUVER to STANDBY when the pilot is in control (standby) and sensor data is good.
+7.	The autopilot shall change states from PULLUP to TRANSITION when the system is supported and sensor data is good.
+8.	The autopilot shall change states from STANDBY to TRANSITION when the pilot is not in control (not standby).
+9.	The autopilot shall change states from STANDBY to MANEUVER when a failure occurs (apfail).
+10.	The sensor shall change states from NOMINAL to FAULT when limits are exceeded.
+11.	The sensor shall change states from NOMINAL to TRANSITION when the autopilot is not requesting support (not request).
+12.	The sensor shall change states from FAULT to TRANSITION when the autopilot is not requesting support (not request) and limits are not exceeded (not limits).
+13.	The sensor shall change states from TRANSITION to NOMINAL when the autopilot is requesting support (request) and the autopilot reports the correct active mode (mode).
+
+    
+    PlantUML result A: 
+    @startuml
+!pragma classDiagram.style.attribute.font.size 10
+!pragma classDiagram.style.association.font.size 10
+
+package "Autopilot" {
+    class Autopilot {
+        -state: AutopilotState
+        -pilotInControl: boolean
+        -systemSupported: boolean
+        -sensorDataGood: boolean
+        -apFail: boolean
+        +changeState(): void
+        +pullup(): void
+    }
+
+    enum AutopilotState {
+        TRANSITION
+        STANDBY
+        NOMINAL
+        MANEUVER
+        PULLUP
+    }
+
+    Autopilot "1" -- "1" AutopilotState : has
+}
+
+package "Sensor" {
+    class Sensor {
+        -state: SensorState
+        -limitsExceeded: boolean
+        -requestSupport: boolean
+        -correctActiveMode: boolean
+        +changeState(): void
+    }
+
+    enum SensorState {
+        NOMINAL
+        FAULT
+        TRANSITION
+    }
+
+    Sensor "1" -- "1" SensorState : has
+}
+
+package "System" {
+    class SystemControl {
+        +checkAutopilotStatus(): boolean
+        +checkSensorStatus(): boolean
+        +checkPilotControl(): boolean
+    }
+}
+
+Autopilot "1" -- "1" SystemControl : checks
+Sensor "1" -- "1" SystemControl : checks
+SystemControl "1" -- "1" Autopilot : controls
+SystemControl "1" -- "1" Sensor : monitors
+Autopilot "1" -- "1" Sensor : requests
+@enduml
+    
+    PlantUML result B: 
+    @startuml
+skinparam classAttributeIconSize 0
+
+package "shared" {
+  abstract class StateMachine {
+    +name : String
+    +lastEvent : String
+    +updateState() : void
+    +getStateName() : String
+  }
+}
+
+package "actors" {
+  class Pilot {
+    +inControl : boolean
+    +isInControl() : boolean
+    +takeControl() : void
+    +releaseControl() : void
+  }
+}
+
+package "support" {
+  interface SupportProvider {
+    +isSupported() : boolean
+    +hasFailure() : boolean
+  }
+
+  class SupportSystem {
+    +supported : boolean
+    +apfail : boolean
+    +isSupported() : boolean
+    +hasFailure() : boolean
+    +setSupported(supported : boolean) : void
+    +setFailure(failed : boolean) : void
+  }
+
+  SupportSystem ..|> SupportProvider
+}
+
+package "sensors" {
+  interface DataProvider {
+    +isDataGood() : boolean
+    +isLimitsExceeded() : boolean
+  }
+
+  enum SensorState {
+    NOMINAL
+    TRANSITION
+    FAULT
+  }
+
+  class Sensor {
+    +state : SensorState
+    +limitsExceeded : boolean
+    +dataGood : boolean
+    +requestFromAutopilot : boolean
+    +reportedMode : AutopilotMode
+    +updateState(support : SupportProvider, autopilot : Autopilot) : void
+    +isDataGood() : boolean
+    +isLimitsExceeded() : boolean
+    +setLimitsExceeded(exceeded : boolean) : void
+    +receiveAutopilotReport(request : boolean, mode : AutopilotMode) : void
+  }
+
+  Sensor ..|> DataProvider
+  Sensor --|> StateMachine
+}
+
+package "control" {
+  enum AutopilotMode {
+    STANDBY
+    TRANSITION
+    NOMINAL
+    MANEUVER
+    PULLUP
+  }
+
+  class Autopilot {
+    +state : AutopilotMode
+    +requestSupport : boolean
+    +pullupLatched : boolean
+    +evaluateTransitions(pilot : Pilot, sensor : Sensor, support : SupportProvider) : void
+    +latchPullup() : void
+    +clearPullup() : void
+    +isRequestingSupport() : boolean
+    +reportMode() : AutopilotMode
+  }
+
+  Autopilot --|> StateMachine
+}
+
+' Associations with multiplicities and labels
+Autopilot "1" --> "1" Sensor : monitors & requests support
+Autopilot "1" --> "1" Pilot : reads control state
+Autopilot "1" --> "1" SupportProvider : queries support status
+Sensor "1" --> "1" Autopilot : receives request + mode
+
+@enduml
+
+
+Evaluation rules:
+- Consider only UML class diagram semantics (eg. classes, attributes, associations, multiplicities, generalisation, composition/aggregation). 
+- Ignore layout, styling, skinparams, comments, and notes. 
+- Treat the Context as authoritative; do not invent entities or relationships not present there.
+
+Decision criteria (in priority order):
+1. Correct domain classes and relationships
+2. Correct associations/multiplicities
+3. Appropriate attributes and types
+4. Terminology alignment
+5. UML class diagram conformance
+
+Evaluation Scores:
+Assign a score from 1-5 for each criterion when comparing and evaluating the two models. The scoring must strictly adhere to the metrics below, while following the evaluation rules and decision criteria.
+
+
+
+Evaluation Metrics:
+
+1. Appropriate conceptual classes aligned with the domain
+
+1 - Very Poor: Classes are mostly incorrect or irrelevant and do not accurately represent the domain.
+2 - Poor: Only a few classes are correct, but the majority of the domain concepts are missing or incorrect. 
+3 - Fair: Some classes are correctly identified, but noticeable misalignments are still present.
+4 - Good: Most classes are correctly identified with only minor misalignments
+5 - Excellent: All classes are correctly identified, fully aligned with the domain. 
+
+2. Associations/Multiplicities between classes for domain reasoning 
+1 - Very Poor: Associations/multiplicities are largely missing or incorrect, comprising domain reasoning. 
+2 - Poor: Few correct associations/multiplicities with critical relationships missing. 
+3 - Fair: Some associations/multiplicities are correct, but noticeable missing or misrepresentations remain. 
+4 - Good: Most associations/multiplicities are correctly identified with only minor errors. 
+5 - Excellent: All essential associations/multiplicities correctly applied.
+
+3. Model attributes with appropriate data types
+1 - Very Poor: Attributes and data types are poorly identified and modeled; largely incorrect or irrelevant.
+2 -  Poor: Few attributes are correct with proper types; critical attributes are missing.
+3 - Fair: Some attributes are correct with proper types, but significant attributes are still missing.
+4 - Good: Most attributes are appropriately modeled with proper data types; minor type issues may exist.
+5 - Excellent: All attributes are correctly modeled with appropriate data types.
+
+4. Consistencies of Terminology with given context
+1 - Very Poor: Terminology is largely inconsistent with the given context 
+2 - Poor: Frequent inconsistencies; critical terms misused or missing. 
+3 - Fair: Some terminology is correct, but noticeable inconsistencies remain. 
+4 - Good: Most terminology aligns with the given context, with minor inconsistencies. 
+5 - Excellent: Terminology is fully consistent with the given context. 
+
+5. Adherence of UML class diagram standards 
+1 – Very Poor: Poor diagram formation with major UML standards ignored, making it largely incomprehensible.
+2 – Poor: Frequent UML violations; diagram is difficult to interpret.
+3 – Fair: Some UML/PlantUML syntax errors, but major representations are still missing. 
+4 – Good: Minor UML/PlantUML notation errors; overall diagram remains understandable.
+5 – Excellent: Fully adheres to UML/PlantUML syntax, notation, and conventions.
+
+
+Return only:
+Winner: A | B 
+Justification: 2–4 concise sentences citing concrete elements from A and B, and includes the scores assigned to the 5 criteria listed above.
+
+    

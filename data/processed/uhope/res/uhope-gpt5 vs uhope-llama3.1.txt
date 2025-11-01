@@ -1,0 +1,12 @@
+Winner: A
+
+Justification: Model A correctly identifies pertinent actors and concepts such as Patient, Doctor, and Receptionist, incorporating comprehensive detail on their associations and interactions in the Electronic Medical Record Database. It has strong adherence to UML standards by properly defining class attributes, associations, and complex multiplicities directly from the real world like the role hierarchy among employees. Conversely, model B duplicates some classes and lacks details within attributes, associations, and interactions. Additionally, it inconsistently uses terminology leading to some terms being undefined or misused.
+
+Notably, model A uses a more sophisticated class design with clear package separation, hierarchical inheritance, and associated attributes and multiplicities tailoring the context, while model B shows inconsistencies largely because of duplication and improper organization.
+
+The scores assigned to the 5 criteria are:
+1. Appropriate conceptual classes aligned with the domain: 5 | 3
+2. Associations/Multiplicities between classes for domain reasoning: 5 | 2
+3. Model attributes with appropriate data types: 4 | 2
+4. Consistencies of Terminology with given context: 5 | 2
+5. Adherence of UML class diagram standards: 5 | 2

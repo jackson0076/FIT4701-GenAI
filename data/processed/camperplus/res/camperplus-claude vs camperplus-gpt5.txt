@@ -1,0 +1,14 @@
+Winner: **A**
+
+Justification: **A** better represents the camp structure and functionalities as it explicitly models key domain entities and their relationships. A includes vital classes such as `Group`, `Activity`, `Facility`, and `comprehensive relationships between CampAdministrator, Camper, Parent, and Staff. In B which creates a mostly well-aligned. **A** has overall better alignment with a clear contextual domain logic as, for example, the `takeAttendance` and `submitReport` functions in the `CampWorker` class directly reflect the contextual requirements.
+
+    1. **Appropriate conceptual classes aligned with the domain**: A: 5, B: 4
+        -  **B** sometimes uses less meaningful models such as general `Money` and `Notification` classes with multiple `id` field across several package entities.
+    2. **Associations/Multiplicities between classes for domain reasoning**: A: 5, B: 4
+        -  B had useful enumeration packaging but struggled with focusing on a relationship model correct relationship and aggregation.
+    3. **Model attributes with appropriate data types**: A: 4, B: 3
+        -  B included types such as `LocalDateTime` and `UUID` which are good practices, however B does not show effective "been there" examples.
+    4. **Consistencies of Terminology with given context**: A: 4, B: 3
+        -  B struggles with consistency though it feasibly models for example,  CamperStatus and Activity types. It is unclear what the context of, for instance, the "volunteer" status translates to work allocation for camp workers.
+    5. **Adherence of UML class diagram standards**: A: 5, B: 4
+        -   B needed better conformance packaging the same entities causing inconsistencies when applying conventions such as enums and classes, contrasted with A.

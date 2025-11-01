@@ -1,0 +1,384 @@
+
+    Role: You are a strict evaluator of UML class diagrams written in PlantUML. Compare two candidate diagrams (A and B) against the given Context.
+    Context:
+    1. As a patient, I want to access my own medical record, so that I can view my medical history 
+2. As a UHOPE employee, I want to enter patient information only once in the Electronic Medical Record Database, so that I do not have to enter it multiple times in different databases 
+3. As a UHOPE employee, I want to view patient information that I am allowed to access that a UHOPE 
+employee from another department has entered into the Electronic Medical Record Database, so that 
+information does not need to be manually exchanged between different databases 
+4. As a receptionist, I want to search for a patient’s file in the Electronic Medical Record Database, so I do not have to ask his or her information every time a patient calls for an appointment and enter it manually 
+5. As a receptionist, I want to edit information in a patient’s file in the Electronic Medical Record Database only once, so that I don’t have to edit it multiple times in different databases 
+6. As a doctor, I want to enter the appointment information into the system, so that I can check what I did the next time the same patient comes in 
+7. As a doctor, I want to only access medical files from my own patients, so that no other doctor can access the medical files of my patients 
+8. As a receptionist, I want to view the patient’s medical file, so that I can confirm that someone is the right person for the appointment 
+9. As a patient, I want to see the results of a test that was performed on me, so that I can look at it whenever I want 
+10. As a patient, I want to see what I have been treated for, so that I can get a better understanding of how the doctor helped me 
+11. As a doctor, I want to edit a patient’s medical file, so that I can make sure they get the right vaccine 
+12. As UHOPE, I want to have an Electronic Medical Record Database that has access to the National 
+Database for Medical Records, so that we can gather the medical files of new patients 
+    
+    PlantUML result A: 
+    @startuml
+
+' =======================
+' Packages
+' =======================
+
+package "actors" {
+  abstract class User {
+    - id: UUID
+    - passwordHash: String
+    + name: String
+    + email: String
+    + authenticate(password: String): boolean
+    + getId(): UUID
+  }
+
+  abstract class Employee {
+    + employeeId: String
+    + department: Department
+    + roles: Set<RoleType>
+    + listAccessiblePatients(): List<Patient>
+  }
+
+  class Doctor {
+    + licenseNumber: String
+    + assignAsPrimaryDoctor(patient: Patient): void
+    + enterAppointment(patientId: UUID, dateTime: DateTime, reason: String): records.Appointment
+    + editMedicalRecord(record: records.MedicalRecord, updateNote: String): boolean
+    + viewPatientRecord(patient: Patient): records.MedicalRecord
+  }
+
+  class Receptionist {
+    + searchPatient(query: String): List<Patient>
+    + viewMedicalFileForConfirmation(patient: Patient): records.MedicalRecord
+    + editPatientFile(patient: Patient, updates: String): boolean
+  }
+
+  class Patient {
+    - nationalId: String
+    + dob: Date
+    + gender: Gender
+    + viewOwnRecord(): records.MedicalRecord
+    + listTestResults(): List<records.TestResult>
+    + listTreatments(): List<records.Treatment>
+  }
+
+  class Department {
+    + name: String
+    + code: String
+  }
+
+  enum Gender {
+    MALE
+    FEMALE
+    NON_BINARY
+    UNSPECIFIED
+  }
+
+  enum RoleType {
+    EMPLOYEE
+    DOCTOR
+    RECEPTIONIST
+    ADMIN
+  }
+
+  Employee --|> User
+  Doctor --|> Employee
+  Receptionist --|> Employee
+  Patient --|> User
+
+  Department "1" <-- "0..*" Employee : belongsTo
+}
+
+package "records" {
+  class MedicalRecord {
+    + recordId: UUID
+    + patientId: UUID
+    + createdAt: DateTime
+    + updatedAt: DateTime
+    + getSummary(): String
+    + addHistory(entry: MedicalHistoryEntry): void
+    + addTestResult(result: TestResult): void
+    + addTreatment(treatment: Treatment): void
+  }
+
+  class MedicalHistoryEntry {
+    + entryId: UUID
+    + description: String
+    + date: Date
+  }
+
+  class TestResult {
+    + resultId: UUID
+    + testType: TestType
+    + performedOn: Date
+    + result: String
+    + enteredBy: actors.Employee
+    + view(): String
+  }
+
+  class Treatment {
+    + treatmentId: UUID
+    + treatmentType: TreatmentType
+    + date: Date
+    + notes: String
+    + administeredBy: actors.Doctor
+    + isVaccine(): boolean
+  }
+
+  class Appointment {
+    + appointmentId: UUID
+    + dateTime: DateTime
+    + reason: String
+    + doctor: actors.Doctor
+    + patient: actors.Patient
+    + notes: String
+    + enterNotes(notes: String): void
+    + getSummary(): String
+  }
+
+  enum TestType {
+    BLOOD
+    XRAY
+    MRI
+    ULTRASOUND
+    OTHER
+  }
+
+  enum TreatmentType {
+    VACCINATION
+    MEDICATION
+    SURGERY
+    THERAPY
+    OTHER
+  }
+
+  ' Containment within a medical record
+  MedicalRecord "1" *-- "0..*" MedicalHistoryEntry : history
+  MedicalRecord "1" *-- "0..*" TestResult : results
+  MedicalRecord "1" *-- "0..*" Treatment : treatments
+}
+
+package "services" {
+  class ElectronicMedicalRecordSystem {
+    + registerPatient(patient: actors.Patient): UUID
+    + updatePatient(patient: actors.Patient): boolean
+    + getRecordByPatientId(patientId: UUID): records.MedicalRecord
+    + searchPatients(query: String): List<actors.Patient>
+    + recordAppointment(appointment: records.Appointment): void
+    + authorizeAccess(user: actors.User, record: records.MedicalRecord, action: Action): boolean
+    + importRecordFromNationalDB(nationalPatientId: String): records.MedicalRecord
+  }
+
+  class AccessControlService {
+    + canView(user: actors.User, record: records.MedicalRecord): boolean
+    + canEdit(user: actors.User, record: records.MedicalRecord): boolean
+    + assignDoctorToPatient(doctor: actors.Doctor, patient: actors.Patient): void
+    + isPatientOf(doctor: actors.Doctor, patient: actors.Patient): boolean
+  }
+
+  enum AccessScope {
+    SELF
+    ASSIGNED_PATIENTS
+    DEPARTMENT
+    ORGANIZATION
+  }
+
+  enum Action {
+    VIEW
+    EDIT
+    CREATE_APPOINTMENT
+    IMPORT
+  }
+
+  ElectronicMedicalRecordSystem ..> AccessControlService : uses
+}
+
+package "integration" {
+  interface NationalMedicalRecordsGateway {
+    + fetchMedicalRecord(nationalPatientId: String): records.MedicalRecord
+    + findPatient(nationalPatientId: String): actors.Patient
+  }
+
+  class NationalDatabaseAdapter {
+    + endpointUrl: String
+    + fetchMedicalRecord(nationalPatientId: String): records.MedicalRecord
+    + findPatient(nationalPatientId: String): actors.Patient
+  }
+
+  NationalDatabaseAdapter ..|> NationalMedicalRecordsGateway
+}
+
+' =======================
+' Cross-package associations & constraints
+' =======================
+
+' One patient has exactly one medical record within the EMR
+actors.Patient "1" *-- "1" records.MedicalRecord : record
+
+' Doctor-patient assignment (primary doctor)
+actors.Doctor "0..*" -- "0..1" actors.Patient : primaryDoctor
+
+' Appointments involve a doctor and a patient
+actors.Doctor "1" o-- "0..*" records.Appointment : appointments
+actors.Patient "1" o-- "0..*" records.Appointment : appointments
+
+' Provenance of clinical data
+actors.Employee "1" <-- "0..*" records.TestResult : enteredBy
+actors.Doctor "1" <-- "0..*" records.Treatment : administeredBy
+
+' EMR system manages core aggregates and integrates externally
+services.ElectronicMedicalRecordSystem "1" --> "0..*" actors.Patient : manages >
+services.ElectronicMedicalRecordSystem "1" --> "0..*" records.MedicalRecord : manages >
+services.ElectronicMedicalRecordSystem ..> integration.NationalMedicalRecordsGateway : integrates >
+
+@enduml
+
+    
+    PlantUML result B: 
+    @startuml
+
+package "domain" {
+	class Patient {
+		+String id
+		+String name
+		+Date birthdate
+		+List<MedicalRecord> medical_records
+	}
+	class MedicalRecord {
+		+String id
+		+Patient patient
+		+List<Medication> medications
+		+List<Treatment> treatments
+		+List<LabResult> lab_results
+	}
+	class Medication {
+		+String id
+		+MedicalRecord medical_record
+		+String name
+		+Date startDate
+		+Date endDate
+	}
+	class Treatment {
+		+String id
+		+MedicalRecord medical_record
+		+String name
+		+Date dateApplied
+	}
+	class LabResult {
+		+String id
+		+MedicalRecord medical_record
+		+String testName
+		+String testValue
+	}
+}
+
+package "domain" {
+	class User {
+		+String id
+		+String username
+		+String password
+	}
+	class Doctor extends User {
+		+List<Patient> patients
+	}
+	class Receptionist extends User {
+		+List<Patient> patients
+	}
+	class UHOPEEmployee extends User {
+		+List<Patient> patients
+	}
+}
+
+package "domain" {
+	class NationalDatabase {
+		+List<MedicalRecord> medical_records
+	}
+	class EMRDatabase {
+		+List<MedicalRecord> medical_records
+		+NationalDatabase national_database
+	}
+}
+
+class Patient extends User {
+	+String id
+	+String name
+	+Date birthdate
+	+List<MedicalRecord> medical_records
+}
+
+Patient --> "*" MedicalRecord
+Doctor --|> UHOPEEmployee
+Receptionist --|> UHOPEEmployee
+
+MedicalRecord --> "*" Medication
+MedicalRecord --> "*" Treatment
+MedicalRecord --> "*" LabResult
+
+EMRDatabase --> "1" NationalDatabase
+
+@enduml
+
+
+Evaluation rules:
+- Consider only UML class diagram semantics (eg. classes, attributes, associations, multiplicities, generalisation, composition/aggregation). 
+- Ignore layout, styling, skinparams, comments, and notes. 
+- Treat the Context as authoritative; do not invent entities or relationships not present there.
+
+Decision criteria (in priority order):
+1. Correct domain classes and relationships
+2. Correct associations/multiplicities
+3. Appropriate attributes and types
+4. Terminology alignment
+5. UML class diagram conformance
+
+Evaluation Scores:
+Assign a score from 1-5 for each criterion when comparing and evaluating the two models. The scoring must strictly adhere to the metrics below, while following the evaluation rules and decision criteria.
+
+
+
+Evaluation Metrics:
+
+1. Appropriate conceptual classes aligned with the domain
+
+1 - Very Poor: Classes are mostly incorrect or irrelevant and do not accurately represent the domain.
+2 - Poor: Only a few classes are correct, but the majority of the domain concepts are missing or incorrect. 
+3 - Fair: Some classes are correctly identified, but noticeable misalignments are still present.
+4 - Good: Most classes are correctly identified with only minor misalignments
+5 - Excellent: All classes are correctly identified, fully aligned with the domain. 
+
+2. Associations/Multiplicities between classes for domain reasoning 
+1 - Very Poor: Associations/multiplicities are largely missing or incorrect, comprising domain reasoning. 
+2 - Poor: Few correct associations/multiplicities with critical relationships missing. 
+3 - Fair: Some associations/multiplicities are correct, but noticeable missing or misrepresentations remain. 
+4 - Good: Most associations/multiplicities are correctly identified with only minor errors. 
+5 - Excellent: All essential associations/multiplicities correctly applied.
+
+3. Model attributes with appropriate data types
+1 - Very Poor: Attributes and data types are poorly identified and modeled; largely incorrect or irrelevant.
+2 -  Poor: Few attributes are correct with proper types; critical attributes are missing.
+3 - Fair: Some attributes are correct with proper types, but significant attributes are still missing.
+4 - Good: Most attributes are appropriately modeled with proper data types; minor type issues may exist.
+5 - Excellent: All attributes are correctly modeled with appropriate data types.
+
+4. Consistencies of Terminology with given context
+1 - Very Poor: Terminology is largely inconsistent with the given context 
+2 - Poor: Frequent inconsistencies; critical terms misused or missing. 
+3 - Fair: Some terminology is correct, but noticeable inconsistencies remain. 
+4 - Good: Most terminology aligns with the given context, with minor inconsistencies. 
+5 - Excellent: Terminology is fully consistent with the given context. 
+
+5. Adherence of UML class diagram standards 
+1 – Very Poor: Poor diagram formation with major UML standards ignored, making it largely incomprehensible.
+2 – Poor: Frequent UML violations; diagram is difficult to interpret.
+3 – Fair: Some UML/PlantUML syntax errors, but major representations are still missing. 
+4 – Good: Minor UML/PlantUML notation errors; overall diagram remains understandable.
+5 – Excellent: Fully adheres to UML/PlantUML syntax, notation, and conventions.
+
+
+Return only:
+Winner: A | B 
+Justification: 2–4 concise sentences citing concrete elements from A and B, and includes the scores assigned to the 5 criteria listed above.
+
+    

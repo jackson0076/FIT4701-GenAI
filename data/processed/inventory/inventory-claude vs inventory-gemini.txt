@@ -1,0 +1,10 @@
+Winner: `A`
+
+Justification: Diagram `A` provides a more comprehensive representation of the domain (classes, attributes, and relationships) compared to `B`. Specifically, `A` correctly captures domain concepts such as `Specialised Users` (e.g., `DAUser` and `InventoryUser`) and their relevant operations (e.g., `approveInterDepartmentRequest`, `updateDatabaseDirectly`). `A` also establishes clear associations like `Request` involving `Asset`, and `AdministrativeUser` creating `Delegation` which in turn creates `InventoryAdministrator`, which are well-aligned with the given domain concepts. In contrast, diagram `B` lacks specificity and skips essential components such as distinct `User` types and relevant operations for handling different types of requests and asset modifications.
+
+The scores assigned to the 5 criteria listed above are:
+1. Conceptual classes aligned with the domain: `A`: 5 / 5, `B`: 3 / 5
+2. Associations/Multiplicities between classes for domain reasoning:  `A`: 5 / 5, `B`: 2 / 5
+3. Model attributes with appropriate data types: `A`: 4 / 5, `B`: 2 / 5
+4. Consistencies of Terminology with the given context:  `A`: 5 / 5, `B`: 3 / 5
+5. Adherence of UML class diagram standards:  `A`: 5 / 5, `B`: 3 / 5

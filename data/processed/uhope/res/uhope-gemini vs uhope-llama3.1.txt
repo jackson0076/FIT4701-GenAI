@@ -1,0 +1,12 @@
+### Winner: A
+
+### Justification:
+ Although both models have their strengths, Diagram A is more aligned with the provided context, including an enumeration of the relevant relationships among classes. Both diagrams accommodate the context concerning medical records and EMR database accurately. Both diagrams contain misalignment in the terminologies like "user, employee, and patient". Still, Diagram A's focus on roles such as `Doctor`, `Receptionist`, and `UHOPE_Employee` and their relationships with medical records and appointments is better organized with clear understandability in the `domain`.UHOPE references in the diagrams illustrate that diagram A is more abstract.
+
+Scores:
+
+1. Appropriate conceptual classes aligned with the domain: 4 (both)
+2. Associations/Multiplicities between classes for domain reasoning: 4 (A); 3 (B)
+3. Model attributes with appropriate data types: 4 (A); 4 (B)
+4. Consistencies of Terminology with given context: 3 (A); 2 (B)
+5. Adherence of UML class diagram standards: 5 (Both)

@@ -1,0 +1,9 @@
+Winner: A
+
+Justification: Model A aligns more accurately with the Context by correctly identifying classes such as `RegularUser` and `Superuser`. This result in a higher degree of domain understanding and allows the creation of precise relationships with other entities. Model A defines attributes and types more accurately, for example, the `RecyclingCenter` and `User` classes have detailed attributes and valid types. Model A accurately represents associations and multiplicities, such as `RegularUser --> "*" RecyclingCenter` for favorites. Model A exhibits more a more consistent use of terminology.
+
+    Classes and relationships between classes: A 5,
+    Associations/Multiplicities between classes: B 4,
+    Model attributes with appropriate data types: A 5,
+    Consistencies of Terminology with given context: A 4,
+    Adherence of UML class diagram standards : B 4.

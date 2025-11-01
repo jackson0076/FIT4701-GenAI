@@ -1,0 +1,20 @@
+Winner: A
+
+Justification: Diagram A more accurately captures the domain requirements with clearly defined classes like `Patient`, `Doctor`, `Receptionist`, `MedicalRecord`, and `EMRDatabase`. It correctly models associations such as a `Doctor` treating multiple `Patients` and accessing `MedicalRecord`. Diagram B lacks the necessary attributes and relationships, such as allowing only `Doctor` to access medical files tied to them or missing interfaces like `UHOPEEmployee`. The relationships in B are often oversimplified, and the model's incorrect implementation of the Patient class causes it to break terminological alignment.
+
+Criteria Scores:
+1. Appropriate conceptual classes aligned with the domain:
+    - A: 5
+    - B: 3
+2. Associations/Multiplicities between classes for domain reasoning:
+   - A: 5
+   - B: 3
+3. Model attributes with appropriate data types:
+   - A: 5
+   - B: 3
+4. Consistencies of Terminology with given context:
+   - A: 5
+   - B: 3
+5. Adherence of UML class diagram standards:
+   - A: 5
+   - B: 3

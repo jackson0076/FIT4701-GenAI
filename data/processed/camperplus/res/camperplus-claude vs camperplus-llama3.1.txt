@@ -1,0 +1,12 @@
+Winner: `A`
+
+**Justification:**
+UML Diagram `A` accurately models all identified entities in the context, making it the superior choice. Classes like `CampAdministrator`, `Parent`, `Camper`, `CampWorker`, and `CampCounselor` are correctly identified and effectively capture the contextual requirements. The associations
+(multiplicities) such as `CampAdministrator` managing multiple `Group` instances and each `Group` participating in activities align well with the role and interactions described in the given Context. Also, `A` explicitly models the requirements for keeping records, scheduling activities, and uploading consent forms. `B` oftentimes fails to correctly map out the roles and interaction/responsibility delineations amongst all of the stakeholder roles (eg. `CampCounselor`, `Camper`, `Parent`) and instead only vaguely touch upon these concepts. `B` has a significant issue of misrepresenting roles via inheritance without delineating a cohesive distinction amongst all the class roles which is far from how the intent of each role in the given context should be represented.
+
+**Scores:**
+1. Conceptual Classes: 5 (A), 1 (B)
+2. Associations/Multiplicities: 5 (A), 2 (B)
+3. Attributes: 4 (A), 2 (B)
+4. Terminology: 5 (A), 2 (B)
+5. UML Diagram Conformance: 4 (A), 3 (B)

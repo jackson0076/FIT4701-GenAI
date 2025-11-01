@@ -1,0 +1,621 @@
+
+    Role: You are a strict evaluator of UML class diagrams written in PlantUML. Compare two candidate diagrams (A and B) against the given Context.
+    Context:
+    1.  Within the same department: data base can be updated directly without any request.
+2. Inter departments: request must be approved by a DA group member and faculty group member unless it came from a higher level group  
+3. Inter faculties transfer: request can be made by any authorised user and approved by faculty group or higher level  
+4. Transfer outside university should be approved by the university group.
+5. Any administrative level user or inventory user can edit an asset that belongs to its department; same thing for faculty user, or university user; in order to make modification if he is authorised to do it.
+6. all fields of an edited asset can be modified  except Ids 
+7. a bulk entry file can be used  
+8. Any DA group member or authorised  inventory group member asset is owned by the department  
+9. Any faculty member can add all related departments inventory  
+10. Any university group member can add all assets in the inventory  
+11. A bulk entry can be used to add many assets 
+12. request can be made by any authorised user  
+13. After creation a request still pending waiting to be approved by an administrative level user according to that have this authority  
+14. An inventory user should check returned asset and update inventory  
+15. IT group members can create a new space and modify floor structure when they receive an exception request from any administrative  level 
+16. Any administration level or authorised  inventory group member can display all pending requests waiting for approval from this level and approve those requests 
+17. When request is treated user is notified by email 
+18. Request is added to the waiting for execution list  
+19. Inventory is updated when user receive requested asset 
+20. Authentication is made by user name and a password for all users 
+21. administrative level working on administration computer  
+22. Any administrative level user can delegate another user to execute some or all his authorized actions. And this user acquires the role of inventory administrator
+    
+    PlantUML result A: 
+    @startuml
+
+package "user" {
+    abstract User {
+        + userId: String
+        + username: String
+        + password: String
+        + email: String
+        + isAuthorized: Boolean
+        + authenticate(username: String, password: String): Boolean
+        + receiveNotification(message: String): void
+    }
+    
+    class AdministrativeUser {
+        + departmentId: String
+        + adminLevel: AdminLevel
+        + workingComputer: String
+        + delegateAuthority(targetUser: User, actions: List<String>): void
+        + approveRequest(requestId: String): Boolean
+        + viewPendingRequests(): List<Request>
+    }
+    
+    class FacultyUser {
+        + facultyId: String
+        + addDepartmentInventory(departmentId: String): void
+        + approveInterFacultyTransfer(requestId: String): Boolean
+    }
+    
+    class DAUser {
+        + departmentId: String
+        + updateDatabaseDirectly(assetId: String): void
+        + approveInterDepartmentRequest(requestId: String): Boolean
+    }
+    
+    class InventoryUser {
+        + departmentId: String
+        + checkReturnedAsset(assetId: String): void
+        + updateInventoryOnReturn(assetId: String): void
+        + addAssetToDepartment(asset: Asset): void
+    }
+    
+    class ITUser {
+        + createSpace(spaceDetails: SpaceDetails): Space
+        + modifyFloorStructure(floorId: String, structure: FloorStructure): void
+        + handleExceptionRequest(requestId: String): void
+    }
+    
+    class UniversityUser {
+        + universityId: String
+        + addAllAssets(): void
+        + approveExternalTransfer(requestId: String): Boolean
+    }
+    
+    enum AdminLevel {
+        DEPARTMENT
+        FACULTY
+        UNIVERSITY
+    }
+    
+    User <|-- AdministrativeUser
+    User <|-- FacultyUser
+    User <|-- DAUser
+    User <|-- InventoryUser
+    User <|-- ITUser
+    User <|-- UniversityUser
+}
+
+package "asset" {
+    class Asset {
+        + assetId: String
+        + name: String
+        + description: String
+        + value: Double
+        + departmentId: String
+        + location: String
+        + status: AssetStatus
+        + createdDate: Date
+        + lastModifiedDate: Date
+        + modifyAsset(field: String, value: String): Boolean
+        + validateModification(field: String): Boolean
+    }
+    
+    class BulkEntry {
+        + bulkId: String
+        + filename: String
+        + uploadDate: Date
+        + processedCount: Integer
+        + errorCount: Integer
+        + processFile(): List<Asset>
+        + validateEntries(): List<ValidationError>
+    }
+    
+    enum AssetStatus {
+        AVAILABLE
+        IN_USE
+        TRANSFERRED
+        MAINTENANCE
+    }
+}
+
+package "organization" {
+    class Department {
+        + departmentId: String
+        + name: String
+        + facultyId: String
+        + getAssets(): List<Asset>
+        + addAsset(asset: Asset): void
+    }
+    
+    class Faculty {
+        + facultyId: String
+        + name: String
+        + universityId: String
+        + getDepartments(): List<Department>
+        + getAllAssets(): List<Asset>
+    }
+    
+    class University {
+        + universityId: String
+        + name: String
+        + getFaculties(): List<Faculty>
+        + getAllAssets(): List<Asset>
+    }
+    
+    class Space {
+        + spaceId: String
+        + name: String
+        + floorId: String
+        + capacity: Integer
+        + isAvailable: Boolean
+    }
+    
+    class Floor {
+        + floorId: String
+        + buildingId: String
+        + level: Integer
+        + structure: FloorStructure
+        + modifyStructure(newStructure: FloorStructure): void
+    }
+}
+
+package "request" {
+    class Request {
+        + requestId: String
+        + requesterId: String
+        + assetId: String
+        + requestType: RequestType
+        + sourceLocation: String
+        + targetLocation: String
+        + status: RequestStatus
+        + createdDate: Date
+        + approvalDate: Date
+        + priority: Priority
+        + submitRequest(): void
+        + approve(approverId: String): void
+        + reject(approverId: String, reason: String): void
+        + execute(): void
+    }
+    
+    class Approval {
+        + approvalId: String
+        + requestId: String
+        + approverId: String
+        + approvalLevel: AdminLevel
+        + approvalDate: Date
+        + comments: String
+        + processApproval(): Boolean
+    }
+    
+    class Notification {
+        + notificationId: String
+        + userId: String
+        + requestId: String
+        + message: String
+        + sentDate: Date
+        + isRead: Boolean
+        + send(): void
+        + markAsRead(): void
+    }
+    
+    enum RequestType {
+        INTRA_DEPARTMENT
+        INTER_DEPARTMENT
+        INTER_FACULTY
+        EXTERNAL_TRANSFER
+        ASSET_MODIFICATION
+        EXCEPTION_REQUEST
+    }
+    
+    enum RequestStatus {
+        PENDING
+        APPROVED
+        REJECTED
+        IN_EXECUTION
+        COMPLETED
+    }
+    
+    enum Priority {
+        LOW
+        MEDIUM
+        HIGH
+        URGENT
+    }
+}
+
+package "delegation" {
+    class Delegation {
+        + delegationId: String
+        + delegatorId: String
+        + delegateeId: String
+        + authorizedActions: List<String>
+        + isActive: Boolean
+        + createdDate: Date
+        + expiryDate: Date
+        + activateDelegation(): void
+        + revokeDelegation(): void
+    }
+    
+    class InventoryAdministrator {
+        + delegationId: String
+        + originalRole: String
+        + acquiredPermissions: List<String>
+        + executeAuthorizedAction(action: String): Boolean
+    }
+}
+
+' Relationships
+University "1" -- "1..*" Faculty : contains
+Faculty "1" -- "1..*" Department : contains
+Department "1" -- "0..*" Asset : owns
+Department "1" -- "0..*" Space : has
+
+User "1" -- "0..*" Request : creates
+Request "1" -- "1..*" Approval : requires
+Request "1" -- "0..*" Notification : generates
+Asset "1" -- "0..*" Request : involves
+
+AdministrativeUser "1" -- "0..*" Delegation : creates
+Delegation "1" -- "1" InventoryAdministrator : creates
+
+BulkEntry "1" -- "0..*" Asset : generates
+
+Floor "1" -- "0..*" Space : contains
+
+@enduml
+    
+    PlantUML result B: 
+    @startuml
+skinparam classAttributeIconSize 0
+
+package "org" {
+  abstract class OrganizationUnit {
+    -id: String {readOnly}
+    +name: String
+  }
+
+  class University extends OrganizationUnit
+  class Faculty extends OrganizationUnit
+  class Department extends OrganizationUnit
+
+  University "1" o-- "1..*" Faculty : comprises
+  Faculty "1" o-- "1..*" Department : contains
+}
+
+package "inventory" {
+  enum AssetStatus {
+    IN_STOCK
+    PENDING_TRANSFER
+    WAITING_RECEIPT
+    TRANSFERRED
+    RETURNED
+    RETIRED
+  }
+
+  class Asset {
+    -assetId: String {readOnly}
+    +name: String
+    +category: String
+    +status: AssetStatus
+    +location: String
+    +serialNumber: String
+    +ownerDepartment: Department
+    +edit(fields: Map<String,String>): void
+    +lockIds(): void
+  }
+
+  class Inventory {
+    +unit: OrganizationUnit
+    +assets: List<Asset>
+    +addAsset(a: Asset): void
+    +updateAsset(a: Asset): void
+    +updateDirect(u: User, a: Asset): boolean
+    +updateOnReceipt(a: Asset): void
+    +bulkAdd(file: BulkEntryFile): List<Asset>
+    +findAssetsByDept(d: Department): List<Asset>
+  }
+
+  class BulkEntryFile {
+    +fileName: String
+    +rows: Integer
+  }
+
+  class BulkImporter {
+    +importAssets(file: BulkEntryFile, owner: OrganizationUnit): List<Asset>
+  }
+
+  class Space {
+    +spaceId: String
+    +name: String
+    +floor: Integer
+    +capacity: Integer
+  }
+
+  class FloorStructure {
+    +building: String
+    +floors: Integer
+    +layoutVersion: String
+    +modifyLayout(details: String): void
+  }
+
+  Department "1" *-- "0..*" Asset : owns
+  Space "0..*" -- "1" Department : allocated to
+  FloorStructure "1" -- "1" University : building of
+  Inventory "1" -- "1" OrganizationUnit : scope
+  Inventory "1" -- "0..*" Asset : manages
+  BulkImporter "1" -- "1" BulkEntryFile : reads
+  BulkImporter "1" --> "1" Inventory : populates
+}
+
+package "requests" {
+  enum RequestType {
+    INTRA_DEPARTMENT_UPDATE
+    INTER_DEPARTMENT_TRANSFER
+    INTER_FACULTY_TRANSFER
+    EXTERNAL_TRANSFER
+    EXCEPTION_REQUEST
+  }
+
+  enum RequestStatus {
+    DRAFT
+    PENDING_APPROVAL
+    APPROVED
+    REJECTED
+    WAITING_EXECUTION
+    EXECUTED
+  }
+
+  enum ApprovalLevel {
+    DEPARTMENT
+    FACULTY
+    UNIVERSITY
+  }
+
+  enum GroupType {
+    DA
+    FACULTY
+    UNIVERSITY
+    INVENTORY
+    IT
+  }
+
+  class Request {
+    +requestId: String
+    +type: RequestType
+    +requester: User
+    +origin: OrganizationUnit
+    +destination: OrganizationUnit
+    +asset: Asset
+    +status: RequestStatus
+    +createdAt: Date
+    +submit(): void
+    +markWaitingExecution(queue: ExecutionQueue): void
+    +notifyUser(service: EmailService): void
+  }
+
+  class Approval {
+    +approved: boolean
+    +decider: User
+    +group: Group
+    +comment: String
+    +decidedAt: Date
+  }
+
+  interface ApprovalPolicy {
+    +requiredGroups(r: Request): List<GroupType>
+    +canDirectUpdate(u: User, r: Request): boolean
+  }
+
+  class DefaultApprovalPolicy
+
+  class ExecutionQueue {
+    +pending: List<Request>
+    +enqueue(r: Request): void
+    +dequeue(): Request
+  }
+
+  class EmailService {
+    +sendEmail(to: String, subject: String, body: String): void
+  }
+
+  Request "1" *-- "0..*" Approval : has
+  Request --> "1" EmailService : uses
+  Request --> "1" ApprovalPolicy : consults
+  ExecutionQueue "1" *-- "0..*" Request : waiting
+  DefaultApprovalPolicy ..|> ApprovalPolicy
+}
+
+package "actors" {
+  interface Approver {
+    +approve(r: Request): Approval
+    +listPending(level: ApprovalLevel): List<Request>
+  }
+
+  interface InventoryAdministrator {
+    +manageInventory(inv: Inventory): void
+  }
+
+  abstract class User {
+    +userId: String
+    +username: String
+    -password: String
+    +email: String
+    +authorized: boolean
+    +createRequest(asset: Asset, origin: OrganizationUnit, dest: OrganizationUnit, type: RequestType): Request
+    +canEdit(asset: Asset): boolean
+    +receiveNotification(msg: String): void
+  }
+
+  class AdministrativeUser extends User {
+    +delegate(to: User, actions: List<ActionType>, start: Date, end: Date): Delegation
+  }
+
+  class InventoryUser extends User {
+    +editAsset(asset: Asset, changes: Map<String,String>): void
+    +checkReturnedAsset(asset: Asset): void
+  }
+
+  class FacultyUser extends User {
+    +faculty: Faculty
+    +addAssetToDepartment(d: Department, a: Asset): void
+  }
+
+  class UniversityUser extends User {
+    +addAsset(a: Asset, d: Department): void
+  }
+
+  class ITMember extends User {
+    +createSpace(d: Department, name: String, floor: Integer, capacity: Integer): Space
+    +modifyFloorStructure(fs: FloorStructure, details: String): void
+    +processException(r: Request): void
+  }
+
+  abstract class Group {
+    +name: String
+    +type: GroupType
+  }
+
+  class DAGroup extends Group
+  class FacultyGroup extends Group
+  class UniversityGroup extends Group
+  class InventoryGroup extends Group
+  class ITGroup extends Group
+
+  AdministrativeUser ..|> Approver
+  InventoryUser ..|> Approver
+  FacultyUser ..|> Approver
+  UniversityUser ..|> Approver
+
+  AdministrativeUser ..|> InventoryAdministrator
+  InventoryUser ..|> InventoryAdministrator
+
+  Group "1" -- "0..*" User : members
+  DAGroup "1" -- "1" Department : oversees
+  FacultyGroup "1" -- "1" Faculty : oversees
+  UniversityGroup "1" -- "1" University : oversees
+  InventoryGroup "1" -- "1" Department : operates
+  ITGroup "1" -- "1" University : supports
+}
+
+package "delegation" {
+  enum ActionType {
+    EDIT_ASSET
+    APPROVE_REQUEST
+    MANAGE_INVENTORY
+    CREATE_SPACE
+    MODIFY_FLOOR
+  }
+
+  class Delegation {
+    +delegator: AdministrativeUser
+    +delegatee: User
+    +actions: List<ActionType>
+    +start: Date
+    +end: Date
+    +grant(): void
+    +revoke(): void
+  }
+
+  Delegation --> InventoryAdministrator : grants role
+  AdministrativeUser "1" -- "0..*" Delegation : issues >
+  Delegation "1" -- "1" User : assignee
+}
+
+package "security" {
+  class AuthenticationService {
+    +authenticate(u: String, p: String): boolean
+  }
+
+  AuthenticationService "1" --> "0..*" User : authenticates
+}
+
+package "devices" {
+  class AdminComputer {
+    +hostname: String
+    +os: String
+  }
+
+  AdministrativeUser "0..*" --> "1..*" AdminComputer : works on
+}
+
+' --- Cross-package behavior links (labels & multiplicities for key flows) ---
+User "1" --> "0..*" Request : creates
+Request "1" --> "1" ExecutionQueue : enqueues when WAITING_EXECUTION
+EmailService "1" --> "0..*" User : notifies (treated)
+
+' Policies capturing approvals per requirements:
+' - Intra-department updates can be direct (no Request) if canDirectUpdate==true.
+' - Inter-department: DA + Faculty approvals unless requester from higher level group.
+' - Inter-faculty: Faculty approval or higher.
+' - External transfer: University approval.
+@enduml
+
+
+Evaluation rules:
+- Consider only UML class diagram semantics (eg. classes, attributes, associations, multiplicities, generalisation, composition/aggregation). 
+- Ignore layout, styling, skinparams, comments, and notes. 
+- Treat the Context as authoritative; do not invent entities or relationships not present there.
+
+Decision criteria (in priority order):
+1. Correct domain classes and relationships
+2. Correct associations/multiplicities
+3. Appropriate attributes and types
+4. Terminology alignment
+5. UML class diagram conformance
+
+Evaluation Scores:
+Assign a score from 1-5 for each criterion when comparing and evaluating the two models. The scoring must strictly adhere to the metrics below, while following the evaluation rules and decision criteria.
+
+
+
+Evaluation Metrics:
+
+1. Appropriate conceptual classes aligned with the domain
+
+1 - Very Poor: Classes are mostly incorrect or irrelevant and do not accurately represent the domain.
+2 - Poor: Only a few classes are correct, but the majority of the domain concepts are missing or incorrect. 
+3 - Fair: Some classes are correctly identified, but noticeable misalignments are still present.
+4 - Good: Most classes are correctly identified with only minor misalignments
+5 - Excellent: All classes are correctly identified, fully aligned with the domain. 
+
+2. Associations/Multiplicities between classes for domain reasoning 
+1 - Very Poor: Associations/multiplicities are largely missing or incorrect, comprising domain reasoning. 
+2 - Poor: Few correct associations/multiplicities with critical relationships missing. 
+3 - Fair: Some associations/multiplicities are correct, but noticeable missing or misrepresentations remain. 
+4 - Good: Most associations/multiplicities are correctly identified with only minor errors. 
+5 - Excellent: All essential associations/multiplicities correctly applied.
+
+3. Model attributes with appropriate data types
+1 - Very Poor: Attributes and data types are poorly identified and modeled; largely incorrect or irrelevant.
+2 -  Poor: Few attributes are correct with proper types; critical attributes are missing.
+3 - Fair: Some attributes are correct with proper types, but significant attributes are still missing.
+4 - Good: Most attributes are appropriately modeled with proper data types; minor type issues may exist.
+5 - Excellent: All attributes are correctly modeled with appropriate data types.
+
+4. Consistencies of Terminology with given context
+1 - Very Poor: Terminology is largely inconsistent with the given context 
+2 - Poor: Frequent inconsistencies; critical terms misused or missing. 
+3 - Fair: Some terminology is correct, but noticeable inconsistencies remain. 
+4 - Good: Most terminology aligns with the given context, with minor inconsistencies. 
+5 - Excellent: Terminology is fully consistent with the given context. 
+
+5. Adherence of UML class diagram standards 
+1 – Very Poor: Poor diagram formation with major UML standards ignored, making it largely incomprehensible.
+2 – Poor: Frequent UML violations; diagram is difficult to interpret.
+3 – Fair: Some UML/PlantUML syntax errors, but major representations are still missing. 
+4 – Good: Minor UML/PlantUML notation errors; overall diagram remains understandable.
+5 – Excellent: Fully adheres to UML/PlantUML syntax, notation, and conventions.
+
+
+Return only:
+Winner: A | B 
+Justification: 2–4 concise sentences citing concrete elements from A and B, and includes the scores assigned to the 5 criteria listed above.
+
+    

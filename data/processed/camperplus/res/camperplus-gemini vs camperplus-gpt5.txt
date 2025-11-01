@@ -1,0 +1,9 @@
+Winner: B
+
+Justification: Class diagram B more accurately maps the functional and user requirements described in the context. it incorporates precise domain concepts such as `EmergencyInfo` and `Notification` and thereby has a better terminology alignment. It also judiciously uses enumerations to capture statuses (such as `CamperStatus` and `SubmissionStatus`). Additionally, the service classes in B act as intermediaries for module operations, whereas A directly couples responsibilities to users
+
+1. Appropriate conceptual classes aligned with the domain: A: 4 | B: 5
+2. Associations/Multiplicities between classes for domain reasoning: A: 3 | B: 4
+3. Model attributes with appropriate data types: A: 4 | B: 4
+4. Consistencies of Terminology with given context: A: 4 | B: 5
+5. Adherence of UML class diagram standards:  A: 4 | B: 4

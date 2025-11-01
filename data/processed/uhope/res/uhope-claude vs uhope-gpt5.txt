@@ -1,0 +1,12 @@
+### Winner: B
+
+### Justification:
+Diagram B is more aligned with the provided context, featuring a greater number of domain-related classes and precise attribute and association definitions that match the described system requirements effectively. Diagram B better represents the interactions amongst `Employee`, `Doctor`, `Receptionist`, and `Patient` while additionally assigning a primary doctor concept to a patient, correlates more with the specific context.
+There are differences in terminology alignment to the given context, however, `Doctor`, `Receptionist`, and `Patient` are clearer and overall understandable in Diagram B. However there are a couple of misses in both models regarding unaligned and missed integration with other relevant systems including `AccessControl`. Furthermore, there are mistakes in UML/PlantUML syntactic elements that degrade ease of interpretation.
+
+### Scores:
+1. Appropriate conceptual classes aligned with the domain: A: 4 | B: 5
+2. Associations/Multiplicities between classes for domain reasoning: A: 3 | B: 4
+3. Model attributes with appropriate data types: A: 4 | B: 5
+4. Consistencies of Terminology with given context: A: 4 | B: 4
+5. Adherence of UML class diagram standards: A: 4 | B: 4
