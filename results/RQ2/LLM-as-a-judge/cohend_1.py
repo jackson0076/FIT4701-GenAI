@@ -15,8 +15,9 @@ def effect_size_label(value: float) -> str:
     return "none"
 
 
-# Load raw scores from CSV
-csv_path = Path(__file__).resolve().parent / "results" / "raw_5_criteria" / "grok_mistral_scores.csv"
+
+repo_root = Path(__file__).resolve().parents[3]
+csv_path = repo_root / "results" / "raw_5_criteria" / "grok_mistral_scores.csv"
 scores_df = pd.read_csv(csv_path)
 
 grok_scores = scores_df[scores_df["judge"] == "Grok"][criteria].to_dict(orient="list")

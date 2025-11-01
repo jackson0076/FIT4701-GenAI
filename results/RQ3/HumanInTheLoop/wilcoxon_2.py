@@ -1,8 +1,11 @@
 import pandas as pd
 from scipy.stats import wilcoxon
+from pathlib import Path
 
 criteria = ["completeness","correctness","standards","understandability","terminology"]
-df = pd.read_csv("results/raw_5_criteria/human_a1_a2_scores.csv")
+repo_root = Path(__file__).resolve().parents[3]
+csv_path = repo_root / "results" / "raw_5_criteria" / "human_a1_a2_scores.csv"
+df = pd.read_csv(csv_path)
 
 for judge in ["A1", "A2"]:
     print(f"\n{judge}")

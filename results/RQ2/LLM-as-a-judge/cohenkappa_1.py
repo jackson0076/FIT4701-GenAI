@@ -5,8 +5,9 @@ from sklearn.metrics import cohen_kappa_score, confusion_matrix
 
 criteria = ["completeness","correctness","standards","understandability","terminology"]
 
-#load docs
-csv_path = Path(__file__).resolve().parent / "results" / "raw_5_criteria" / "grok_mistral_scores.csv"
+
+repo_root = Path(__file__).resolve().parents[3]
+csv_path = repo_root / "results" / "raw_5_criteria" / "grok_mistral_scores.csv"
 scores_df = pd.read_csv(csv_path)
 
 
