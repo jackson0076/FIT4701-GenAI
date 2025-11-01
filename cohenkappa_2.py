@@ -6,7 +6,7 @@ from sklearn.metrics import cohen_kappa_score, confusion_matrix
 criteria = ["completeness","correctness","standards","understandability","terminology"]
 
 #load scores
-csv_path = Path(__file__).resolve().parent / "data" / "raw_5_criteria" / "human_a1_a2_scores.csv"
+csv_path = Path(__file__).resolve().parent / "results" / "raw_5_criteria" / "human_a1_a2_scores.csv"
 scores_df = pd.read_csv(csv_path)
 
 a1 = scores_df[scores_df["judge"] == "A1"][criteria].to_numpy().flatten()
@@ -24,4 +24,4 @@ a2_bin = to_binary(a2)
 kappa = cohen_kappa_score(a1_bin, a2_bin)
 agree = (a1_bin == a2_bin).mean()
 
-print(f"Binary Cohen's Kappa (1–3 vs 4–5): {kappa:.3f}")
+print(f"Binary Cohen's Kappa (1-3 vs 4-5): {kappa:.3f}")

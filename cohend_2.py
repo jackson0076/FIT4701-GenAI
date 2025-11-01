@@ -16,7 +16,7 @@ def effect_size_label(value: float) -> str:
 
 
 # Load human A1/A2 raw scores from CSV
-csv_path = Path(__file__).resolve().parent / "data" / "raw_5_criteria" / "human_a1_a2_scores.csv"
+csv_path = Path(__file__).resolve().parent / "results" / "raw_5_criteria" / "human_a1_a2_scores.csv"
 scores_df = pd.read_csv(csv_path)
 
 a1 = scores_df[scores_df["judge"] == "A1"][criteria].to_dict(orient="list")

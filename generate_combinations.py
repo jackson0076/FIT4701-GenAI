@@ -126,7 +126,7 @@ def generate_prompt_all():
 if __name__ == "__main__":
     # generate the combinations CSV
 
-    # generate all prompts and save to data_fixed folder
+    # generate all prompts and save 
     generate_prompt_all()
 
     print("done")

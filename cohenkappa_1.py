@@ -6,7 +6,7 @@ from sklearn.metrics import cohen_kappa_score, confusion_matrix
 criteria = ["completeness","correctness","standards","understandability","terminology"]
 
 #load docs
-csv_path = Path(__file__).resolve().parent / "data" / "raw_5_criteria" / "grok_mistral_scores.csv"
+csv_path = Path(__file__).resolve().parent / "results" / "raw_5_criteria" / "grok_mistral_scores.csv"
 scores_df = pd.read_csv(csv_path)
 
 
@@ -25,5 +25,5 @@ mistral_bin = to_binary(mistral)
 kappa = cohen_kappa_score(grok_bin, mistral_bin)
 agree = (grok_bin == mistral_bin).mean()
 
-print(f"Binary Cohen's Kappa (1–3 vs 4–5): {kappa:.3f}")
+print(f"Binary Cohen's Kappa (1-3 vs 4-5): {kappa:.3f}")
 

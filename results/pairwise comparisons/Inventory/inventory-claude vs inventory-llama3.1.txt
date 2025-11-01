@@ -1,0 +1,22 @@
+Winner: A
+
+Justification:
+- Diagram A shows a clear distinction between different user roles and their specific actions, directly addressing the context requirements in finer detail than diagram B.
+- Diagram B’s use of `RequestManager`, `Inventory_manager`, and `IT_group` classes introduces ambiguities not explicitly stated in the context and omits numerous context specific classes and actions.
+- Diagram A provides adequate and relevant details around user authentication, asset management and request handling.
+Scoring:
+1. Appropriate conceptual classes:
+    - A: 5 (Excellent. All relevant domain classes are explicitly detailed.)
+    - B: 2 (Poor. Many domain concepts are omitted such as Individual UMs for Administrative, Faculty, DA etc.)
+2. Associations/multiplicities:
+    - A: 5 (Excellent. All essential relationships correctly implemented e.g., User to Requests, InventoryUser to Asset)
+    - B: 3 (Fair. Important relationships are underspecified, e.g., within asset and requests)
+3. Model attributes:
+    - A: 5 (Excellent. Attributes correct and meaningful, e.g., `Asset`, `Delegation`)
+    - B: 3 (Fair. Attributes are inconsistent across models between packages, missing IDs and management of user roles)
+4. Consistencies of terminology:
+    -  A: 5 (Excellent, with entities explicitly named according to context)
+    -  B: 3 (Fair. Different entities with the same domain name introduced leading to inconsistency e.g User and Request in multiple packages)
+5. Adherence of UML Class diagram standards:
+    -  A: 5 (Excellent. Fully conforms to UML/PlantUML standards:  detailed associations, data types and inheritance)
+    -  B: 3 (Fair. Incorrect associations introduced; missing critical UML elements. Formal relationships not fully specified in diagram )
