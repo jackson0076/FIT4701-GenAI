@@ -99,8 +99,8 @@ context_file = f'{lead_text}.txt'
 
 
 def generate_prompt_all():
-    """Generate all possible combinations of PlantUML files and save prompts to data_fixed folder"""
-    output_dir = f'data_fixed/{lead_text}'
+    """Generate all possible combinations of PlantUML files and save prompts to data/processed folder"""
+    output_dir = f'data/processed/{lead_text}'
     os.makedirs(output_dir, exist_ok=True)
 
     # generate all combinations
