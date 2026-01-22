@@ -1,0 +1,22 @@
+1.  Within the same department: data base can be updated directly without any request.
+2. Inter departments: request must be approved by a DA group member and faculty group member unless it came from a higher level group  
+3. Inter faculties transfer: request can be made by any authorised user and approved by faculty group or higher level  
+4. Transfer outside university should be approved by the university group.
+5. Any administrative level user or inventory user can edit an asset that belongs to its department; same thing for faculty user, or university user; in order to make modification if he is authorised to do it.
+6. all fields of an edited asset can be modified  except Ids 
+7. a bulk entry file can be used  
+8. Any DA group member or authorised  inventory group member asset is owned by the department  
+9. Any faculty member can add all related departments inventory  
+10. Any university group member can add all assets in the inventory  
+11. A bulk entry can be used to add many assets 
+12. request can be made by any authorised user  
+13. After creation a request still pending waiting to be approved by an administrative level user according to that have this authority  
+14. An inventory user should check returned asset and update inventory  
+15. IT group members can create a new space and modify floor structure when they receive an exception request from any administrative  level 
+16. Any administration level or authorised  inventory group member can display all pending requests waiting for approval from this level and approve those requests 
+17. When request is treated user is notified by email 
+18. Request is added to the waiting for execution list  
+19. Inventory is updated when user receive requested asset 
+20. Authentication is made by user name and a password for all users 
+21. administrative level working on administration computer  
+22. Any administrative level user can delegate another user to execute some or all his authorized actions. And this user acquires the role of inventory administrator

@@ -1,0 +1,13 @@
+1.	Exceeding sensor limits shall latch an autopilot pullup when the pilot is not in control (not standby) and the system is supported without failures (not apfail).   
+2.	The autopilot shall change states from TRANSITION to STANDBY when the pilot is in control (standby).
+3.	The autopilot shall change states from TRANSITION to NOMINAL when the system is supported and sensor data is good.
+4.	The autopilot shall change states from NOMINAL to MANEUVER when the sensor data is not good.
+5.	The autopilot shall change states from NOMINAL to STANDBY when the pilot is in control (standby).
+6.	The autopilot shall change states from MANEUVER to STANDBY when the pilot is in control (standby) and sensor data is good.
+7.	The autopilot shall change states from PULLUP to TRANSITION when the system is supported and sensor data is good.
+8.	The autopilot shall change states from STANDBY to TRANSITION when the pilot is not in control (not standby).
+9.	The autopilot shall change states from STANDBY to MANEUVER when a failure occurs (apfail).
+10.	The sensor shall change states from NOMINAL to FAULT when limits are exceeded.
+11.	The sensor shall change states from NOMINAL to TRANSITION when the autopilot is not requesting support (not request).
+12.	The sensor shall change states from FAULT to TRANSITION when the autopilot is not requesting support (not request) and limits are not exceeded (not limits).
+13.	The sensor shall change states from TRANSITION to NOMINAL when the autopilot is requesting support (request) and the autopilot reports the correct active mode (mode).

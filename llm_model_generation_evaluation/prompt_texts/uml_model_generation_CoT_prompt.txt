@@ -1,0 +1,309 @@
+You are a senior software architect.
+ Let's think step-by-step from the requirements to:
+ (a) extract entities, roles, packages; (b) define attributes (with types) and methods (signatures/returns) of each entity; (c) decide inheritance, interfaces, enums; (d) assign associations with multiplicities + labels; (e) sanity-check PlantUML syntax so it would compile.
+ Then output only the final PlantUML code, wrapped inside one single fenced code block
+Requirements: 
+1. The PACEMAKER model type shall support single and dual chamber rate adaptive pacing.
+2. The user interface shall be capable of utilizing and managing windows for display of text and graphics.
+3. The user interface shall be capable of processing user positioning and input buttons.
+4. modification.
+5. The user interface shall be capable of visually indicating when the DCM and the device are communicating.
+6. The user interface shall be capable of visually indicating when telemetry is lost due to the device being out of range.
+7. The user interface shall be capable of visually indicating when telemetry is lost due to noise.
+8. The user interface shall be capable of visually indicating when a different PACEMAKER device is approached than was previously interrogated.
+9. The Set Clock function shall set the date and time of the device.
+10. The New Patient function shall allow a new device to be interrogated without exiting the software application.
+11. The Quit function shall end a telemetry session.
+12. A Bradycardia Parameters Report shall be available.
+13. A Temporary Parameters Report shall be available.
+14. An Implant Data Report shall be available.
+15. A Threshold Test Results Report shall be available.
+16. A Measured Data Report shall be available.
+17. A Marker Legend Report shall be available.
+18. A Session Net Change Report shall be available.
+19. A Final Report shall be available. This will consist of the Measured Data, Threshold Test, Trending, Histograms, Implant Data, and Net Change reports.
+20. A Rate Histogram Report shall be available.
+21. A Trending Report shall be available.
+22. The DCM shall be capable of displaying real time and surface ECG data, which shall be accomplished using the DCMs internal monitor.
+23. The system shall be capable of displaying up to three Real-Time traces (2 Telemetered, 1 Surface ECG), along with an annotation for display of event markers, in a scrollable fashion.
+24. The DCM shall use the DCMs internal strip chart recorder to provide a means of printing combinations of real time data.
+25. The DCM shall be capable of printing real time telemetered data and a surface ECG.
+26. The printer shall be capable of simultaneously printing up to three real time traces, along with full annotation for display of event markers.
+27. The DCM shall use an inductive telemetry wand to communicate with the pulse generator,
+maintaining consistent communication over the range of 0 cm to 5 cm between the wand and the pulse generator.
+28. The Atrial Bipolar Pace/Sensing lead system type shall be supported.
+29. The Ventricular Bipolar Pace/Sensing lead system type shall be supported.
+30. The system shall operate normally with atrial pace/sense leads between 100 and 2500 ohms.
+31. The system shall operate normally with the ventricular pace/sense leads between 100 and 2500 ohms.
+32. The device shall output pulses with programmable voltages and widths (atrial and ventricular) which provide electrical stimulation to the heart for pacing.
+33. The atrial and ventricular pacing pulse amplitudes shall be independently programmable.
+34. Rate sensing shall be accomplished using bipolar electrodes and sensing circuits.
+35. All rate detection decisions shall be based on the measured cardiac cycle lengths of the sensed rhythm.
+36. Rate shall be evaluated on an interval-by-interval basis.
+37. A means shall be provided for the physician to manually adjust the sensing threshold of the device for both the ventricular and atrial sense channels.
+38. The following bradycardia operating modes shall be programmable: Off, DDDR, VDDR, DDIR, DOOR, VOOR, AOOR,VVIR, AAIR, DDD, VDD, DDI, DOO, VOO, AOO, VVI, AAI, VVT and AAT.
+39. OVO, OAO, ODO, and OOO shall be available in temporary operation.
+40. During asynchronous pacing, paces shall be delivered without regard to sense.
+41. During triggered pacing, a sense in a chamber shall trigger an immediate pace in that chamber
+42. During inhibited pacing, a sense in a chamber shall inhibit a pending pace in that chamber.
+43. During tracked pacing, an atrial sense shall cause a tracked ventricular pace after a programmed AV delay, unless a ventricular sense was detected beforehand.
+44. The following bradycardia states shall be available: Permanent, Temporary, Pace-Now, Magnet, and Power-On Reset (POR).
+45. The normal pacing parameters programmed shall be used in the permanent brady state.
+46. The temporary brady pacing state is independent of other pacing functions.
+47. The temporary brady parameters programmed shall be used in the temporary brady state.
+48. The temporary state shall be capable of being used to temporarily test various system parameters or provide patient diagnostic testing.
+49. Temporary brady pacing shall be terminated by one of the following: breaking the telemetry link, a Pace-Now pace, or a DCM command to the device to cancel temporary pacing.
+50.  Commanded emergency bradycardia pacing (Pace-Now) shall be available.
+51. The mode Pace-Now pace parameter shall have a value of VVI.
+52. The lower rate limit Pace-Now pace parameter shall have a value of 65 ppm ± 8ms.
+53. The amplitude Pace-Now pace parameter shall have a value of 5.0 V ± 0.5V.
+54. The pulse width Pace-Now pace parameter shall have a value of 1.00 ms ± 0.02 ms.
+55. The ventricular refractory Pace-Now pace parameter shall have a value of 320 ms ± 8 ms.
+56. The ventricular sensitivity shall have a value of 1.5 mV.
+57. The rst Pace-Now pacing pulse shall be issued within two cardiac cycles plus 500 ms from the time of the last user action required to activate the Pace-Now state.
+58. Once initiated, Pace-Now pacing shall continue until the DCM changes the device pacing mode.
+59. A Power-on-reset (POR) state shall be entered when the battery voltage drops so low that PG operation is not predictable.
+60. All functions shall be disabled until the battery voltage exceeds the POR trip voltage.
+61. The mode POR pace parameter shall have a value of VVI
+62. The lower rate limit POR pace parameter shall have a value of 65 ppm ± 8 ms.
+63. The amplitude POR pace parameter shall have a value of 5.0 V ± 0.5 V.
+64. The pulse width POR pace parameter shall have a value of 0.5 ms ± 0.02ms.
+65. The ventricular refractory POR pace parameter shall have a value of 320ms ± 8ms.
+66. The ventricular sensitivity shall have a value of 1.5 mV.
+67. A standard cardiac donut magnet shall be detected by the device at a distance of 2.5 cm between the center of the labeled surface of the device and the surface of the magnet.
+68. When the magnet is in place, the device shall pace asynchronously with a fixed pacing rate.
+69. The device mode shall be AOO if previous mode was AXXX, VOO if previous mode was VXXX, DOO if previous mode was DXXX, or OOO if previous mode was OXO modes.
+70. At BOL the magnet rate shall be 100 ppm.
+71. At ERT the magnet rate shall decrease further to 85 ppm.
+72. At ERN the magnet rate shall decrease to 90 ppm.
+73. When the magnet is removed the device shall automatically assume pretest operation.
+74. The magnet mode shall have the capability to be programmed OFF, so that it will ignore magnet detection.
+75. The device shall be capable of storing the device model and serial number, and implant date information.
+76. The device shall be capable of storing the lead implant date and polarity information.
+77. The device shall be capable of storing pacing thresholds and P and R-wave amplitude information
+78. The device shall be capable of storing the pacing lead impedance information.
+79. The device shall be capable of storing the patients indications for pacing.
+80. Measured Data diagnostic tools shall be provided.
+81. Threshold Test diagnostic tools shall be provided.
+82. Rate Trending and Histograms diagnostic tools shall be provided.
+83. Real-time data diagnostic tools shall be provided.
+84. The device shall allow for DCM-commanded measurement of P and R waves.
+85. The device shall allow for manual measurement capability.
+86. DCM commanded lead impedance shall be made with the device in the temporary state.
+87. Lead impedance measurements shall be conducted at a default value of 5.5 V.
+88. 80. Monitoring voltage information shall be provided.
+89. Battery Status indicator information shall be provided.
+90. Last interrogation date information shall be provided.
+91. The battery status for the device shall be used to predict the following
+battery status levels:
+
+Battery Status Level  	|  Status  	| Functionality
+Beginning of Life 	    BOL      	  Fully functional
+Elective Replacement Near   ERN           Fully functional
+Elective Replacement Time   ERT 	  Non-rate-adaptive single chamber modes only. Temporary
+ 					  programming, automatic threshold testing, measured data,
+ 					  electrograms, and event markers disabled.
+Elective Replacement Past   ERP           Same as ERT, except pacing rate gradually decreases as
+ 					  battery voltage decreases.
+
+92. An automatic pacing threshold test in AAI, VVI, and DDD modes shall be available on command of the DCM for both pulse width and amplitude measurements.
+93. Programmable DDD/AAI back-up pacing with a programmable rate shall be available for atrial testing, and programmable DDD/VVI back-up pacing with programmable rate shall be available for ventricular testing.
+94. The operator interface of the system shall be able to display histograms of pacing rate and intrinsic rate distributions from a histogram recording period.
+95. Distributions shall be recorded for all paced atrial events.
+96. Distributions shall be recorded for all sensed atrial events.
+97. Distributions shall be recorded for all paced ventricular events.
+98. Distributions shall be recorded for all sensed ventricular events.
+ The number of premature ventricular contractions (PVCs) and atrial tachycardia response episodes shall be recorded and displayed.
+99. The recording period for a rate histogram shall be the time since the rate
+ histograms were last reset to the present.
+100. The rate histograms shall be resettable (clearing previously recorded data) via telemetry.
+101. All rate histograms shall be cleared simultaneously.
+102. The intervals associated with the histogrammed events shall begin and end at the events specified in the following table:
+
+Histogram Event 	| Beginning Event   		   | Ending Event
+Sensed Atrial		  Refractory or non-refractory 	    Refractory or non refractory atrial
+ 			  atrial sense or atrial pace 	    sense
+Paced Atrial		  Atrial pace or non-refractory     Atrial pace
+ 	  		  atrial sense
+Sense Ventricular 	  Non-refractory ventricular sense  Non-refractory ventricular sense
+ 			  or ventricular pace
+Paced Ventricular 	  Ventricular pace or 		     Ventricular pace
+ 			  non refractory ventricular sense
+
+103. The system shall be configurable to record and display the following data items separately or concurrently over a programmable duration and storage method:
+   1. Pacing Rate
+   2. Sensor Data
+104. The recording duration shall be programmed to one of the following options:
+ 	1. Fixed: Start recording now and stop when available storage is full
+ 	         (time stamped at beginning).
+ 	2. Continuous: Circular buffer keeping the latest information (time stamped at end)
+105. The recording duration shall be time stamped as indicated above.
+106. The system shall display only the programmable durations that are applicable for the current pacing mode.
+107. Real-time internal electrograms shall be made available from the atrial and ventricular sense/pace leads.
+108. The real-time electrogram transmission shall be re-initiated if the telemetry link was broken during the transmission of electrograms and then reestablished.
+109. The user shall have the option of viewing the electrograms on the screen.
+110. The user shall have the option of selecting which electrograms are viewed and the resolution utilized.
+111. An atrial internal electrogram option shall be provided.
+112. A ventricular internal electrogram option shall be provided.
+113. An atrial and ventricular internal electrogram option shall be provided.
+114. For the surface electrocardiogram (ECG), the user shall have the capability to select the gain utilized (0.5X, 1X, or 2X).
+115. For the internal electrogram (EGM), the display gain shall be selectable (0.5X, 1X, or 2X).
+116. The capability shall exist to print and display annotated event marker abbreviations listed below on the real-time electrogram.
+117. These markers shall be a combination of intrinsic cardiac and device-related events.
+118.  DCM malfunctions shall be indicated.
+119. Parameter interactive limit errors shall be indicated
+120. Printer errors shall be indicated.
+121. Operating states shall be mutually exclusive.
+122. When Rate Hysteresis is disabled, the LRL shall de ne the longest allow
+able pacing interval.
+123. In DXX or VXX modes, the LRL interval starts at a ventricular sensed or paced event.
+124. In AXX modes, the LRL interval starts at an atrial sensed or paced event.
+125. The AV delay shall be the programmable time period from an atrial event (either
+ intrinsic or paced) to a ventricular pace.
+126. In atrial tracking modes, ventricular pacing shall occur in the absence of a sensed ventricular event within the programmed AV delay when the sensed atrial rate is between the programmed LRL and URL.
+127. AV delay shall either be
+ 	1. Fixed (absolute time)
+ 	2. Dynamic
+128. A paced AV (PAV) delay shall occur when the AV delay is initiated by an atrial pace.
+129. A sensed AV (SAV) delay shall occur when the AV delay is initiated by an atrial sense.
+130.  If dynamic, the AV delay shall be determined individually for each new cardiac cycle based on the duration of previous cardiac cycles. The previous cardiac cycle length is multiplied by a factor stored in device memory to create the dynamic AV delay.
+131.  The AV delay shall vary between
+ 	1. A programmable maximum paced AV delay
+ 	2. A programmable minimum paced AV delay
+132. The Sensed AV Delay Offset option shall shorten the AV delay following a tracked atrial sense.
+133. Depending on which option is functioning, the sensed AV delay offset shall be applied to the fixed AV delay.
+134. The Ventricular Refractory Period shall be the programmed time interval following a ventricular event during which time ventricular senses shall not inhibit nor trigger pacing
+135. For single chamber atrial modes, the Atrial Refractory Period (ARP) shall be
+ the programmed time interval following an atrial event during which time atrial events shall not inhibit nor trigger pacing.
+136. The Post Ventricular Atrial Refractory Period shall be available in modes with
+ ventricular pacing and atrial sensing.
+137.The Post Ventricular Atrial Refractory Period shall be the programmable time interval following a ventricular event when an atrial cardiac event shall not inhibit an atrial pace.
+138.  When Extended PVARP is enabled, an occurrence of a premature ventricular contraction (PVC) shall cause the pulse generator to use the Extended PVARP value for the post-ventricular atrial refractory period following the PVC.
+139. The PVARP shall always return to its normal programmed value on the subsequent cardiac cycle regardless of PVC and other events.
+140. At most one PVARP extension shall occur every two cardiac cycles.
+141. The PG shall also be in refractory to atrial senses during the AV interval.
+142. In the presence of continuous noise the device response shall be asynchronous pacing.
+143. When Atrial Tachycardia Response is enabled, the pulse generator shall declare an atrial tachycardia if the intrinsic atrial rate exceeds the URL for a sufficient amount of time.
+144. AT onset shall be detected when the intervals between atrial senses are predominately, but not exclusively, faster than URL.
+145. AT cessation shall be detected when the intervals between atrial senses are mostly, but not exclusively, faster than URL.
+146. The detection period shall be short enough so ATR therapy is not unnecessarily delayed nor continued.
+147. The detection period shall be long enough that occasional premature atrial contractions do not cause unnecessary ATR therapy, nor cease necessary ATR therapy upon occasional slow beats.
+148. When atrial tachycardia is detected, the ATR algorithm shall enter an ATR Duration state.
+149. When in ATR Duration, the PG shall delay a programmed number of cardiac cycles before entering Fallback.
+150. The Duration delay shall be terminated immediately.
+151. The Fallback shall be avoided if, during the Duration delay, the ATR detection algorithm determines that atrial tachycardia is over.
+152. ATR-related mode switches shall always be synchronized to a ventricular paced or sensed 	  event.
+153. The device shall have the ability to adjust the cardiac cycle in response to metabolic need as measured from body motion using an accelerometer.
+154.  The Maximum Sensor Rate is the maximum pacing rate allowed as a result of
+ sensor control. The Maximum Sensor Rate shall be
+ 	1. Required for rate adaptive modes
+ 	2. Independently programmable from the URL
+155.  The accelerometer shall determine the pacing rate that occurs at various levels of steady state patient activity.
+156. The highest response factor setting (16) shall allow the greatest incremental change in rate.
+157. The lowest response factor setting (1) shall allow a smaller change in rate.
+158. The accelerometer shall determine the rate of increase of the pacing rate.
+159. The accelerometer shall determine the rate of decrease of the pacing rate.
+160. The recovery time shall be the time required for the rate to fall from MSR to LRL when activity falls below the activity threshold.
+161. When enabled, hysteresis pacing shall result in a longer period following a sensed
+ event before pacing.
+162. Rate Smoothing shall limit the pacing rate change that occurs due to precipitous changes in the intrinsic rate.
+163. Two programmable rate smoothing parameters shall be available to allow the cardiac cycle interval change to be a percentage of the previous cardiac cycle interval:
+ 	1. Rate Smoothing Up
+ 	2. Rate Smoothing Down
+164. The increase in pacing rate shall not exceed the Rate Smoothing Up percentage.
+165. The decrease in pacing rate shall not exceed the Rate Smoothing Down percentage.
+166. Each marker shall show time-or-occurrence, accurate to 1 ms, since the most recent, non-refractory event in that chamber.
+167. The system shall provide off-line prediction analysis of sensor indicated rate with or without intrinsic rate for the synchronized data collected.
+168. The atrial and ventricular pacing pulse width shall be independently programmable.
+169. Each report shall contain the following header information:
+ 	1. Institution name
+ 	2. Date and time of report printing
+ 	3. Device model and serial number
+ 	4. DCM serial number
+	5. Application model and version number
+ 	6. Report nam
+
+170. The DCM shall use some other medium, such as RF or ultrasound, that is safe and legal to use, for maintaining consistent telemetry with an implanted medical device.
+171. For the surface electrocardiogram (ECG), the user shall have the capability to select whether high pass filtering is on.
+172. For the internal electrogram (EGM), the display gain shall apply to all channels.
+173. Real-time internal electrograms shall be made available from a surface electrogram.
+174. The sensed AV delay offset shall be applied to the dynamic AV delay.
+175. The user shall have the option of viewing the electrograms through a printed copy.
+176. The Post Ventricular Atrial Refractory Period shall be the programmable time interval following a ventricular event when an atrial cardiac event shall not trigger a ventricular pace.
+177. During Fallback, if the ATR detection algorithm determines that atrial tachycardia is over, the following shall occur: Fallback is terminated immediately.
+178. During Fallback, if the ATR detection algorithm determines that atrial tachycardia is over, the mode is switched back to normal shall occur.
+179. If the atrial tachycardia condition exists after the ATR Duration delay is over, the PG enters a Fallback state and switches to a VVIR Fallback Mode.
+180. If the atrial tachycardia condition exists after the ATR Duration delay is over, the pacing rate is dropped to the lower rate limit. 
+181. The activity threshold is the value the accelerometer sensor output shall exceed
+ before the pacemakers rate is affected by activity data.
+182. When in AAI mode, a single, non-refractory sensed atrial event shall activate hysteresis pacing.
+183. When in an inhibiting or tracking mode with ventricular pacing, a single, non-refractory sensed ventricular event shall activate hysteresis pacing.
+184. Hysteresis pacing must be enabled (not O ).
+185. The pacing mode must be inhibiting or tracking.
+186. The current pacing rate must be faster than the Hysteresis Rate Limit (HRL), which may be slower than the Lower Rate Limit (LRL).
+
+187. The About function displays the following:
+ - Application model number
+ - Application software revision number currently in use
+ - DCM serial number
+ - Institution name
+
+
+Constraints:
+Organise classes into packages (add others if useful)..
+Use inheritance where appropriate (e.g., Publisher extends User).
+ All attributes and methods must include a concrete type.
+ Visibility (+/#/-) should be included where meaningful; default is + (public) if not specified in the requirements or examples.
+Relationships show multiplicities (e.g., “1”, “0..*”, etc) and labels where meaningful.
+Avoid placeholders like <Type>—use concrete names.
+Keep design-specific infra (DB tables, REST endpoints) out of the class model.
+Do not include any text after @enduml.
+This is an example PlantUML structure to follow:
+@startuml
+
+package "gui" {
+	Game --> "1" Player_manager
+	Game --> "1" Display_manager
+
+	abstract Updatable
+
+	Players_layout --|> Updatable
+	Player_manager --|> Updatable
+	Display_manager --|> Updatable
+	Character --|> Updatable
+	InputBox --|> Updatable
+
+	abstract Gui_control
+
+	Players_layout --|> Gui_control
+	Player_manager --|> Gui_control
+	Display_manager --|> Gui_control
+
+	Display_manager --> "1" InputBox
+	Display_manager --> "1" Player_manager 
+	Display_manager --> "1" Players_layout
+
+	Player_manager --> "1..*" Character
+}
+
+package "connection" {
+	Network --> "1" ConnectionManager
+}
+
+package "model" {
+	Game_state --> "1..*" Player
+	Game_state --> "*" Collectable
+}	
+
+package "control" {
+	Katch --> "1" Game_state
+	Katch "1" -- "1" ConnectionManager
+	Gui_control --> "1" Katch
+}
+
+class Updatable {
+	void update()
+}
+
+@enduml
+Output: one PlantUML code block only (from `@startuml` to `@enduml`)

@@ -1,5 +1,4 @@
-# Domain Model Generation from Requirements using Generative AI
-
+# Class Model Generation from Requirements using Large Language Models
 
 ### What this repo contains
 - Prompt template used to generate PlantUML diagrams (`prompt_texts/`).

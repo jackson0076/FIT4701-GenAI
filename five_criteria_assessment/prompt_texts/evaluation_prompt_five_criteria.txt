@@ -1,0 +1,39 @@
+Context: <requirements>
+Result: <PlantUML>
+
+You are a senior software architect. Can you grade a PlantUML class diagram code against a NL specification context? Assign a score using integers 1-5 for the following criterias, given their rationale. Be strict.
+
+1) Coverage of Requirements (Completeness)
+1 - Very Poor: <40% of critical items present; major gaps.
+2 - Poor: ~40-59% present; many critical omissions.
+3 - Fair: ~60-79% present; several important omissions.
+4 - Good: ~80-94% present; a few moderate omissions.
+5 - Excellent: >=95% of critical items included; only minor/low-priority gaps.
+
+2) Accuracy & Logical Consistency
+1 - Very Poor: Misrepresents domain; incoherent or contradictory.
+2 - Poor: Multiple major mismatches (roles, multiplicities, directions).
+3 - Fair: Several inaccuracies but overall intent mostly intact.
+4 - Good: One or two minor slips; generally faithful and consistent.
+5 - Excellent: Fully consistent with Context; correct types, cardinalities, inheritance, and relation kinds.
+
+3) UML & PlantUML Standards (syntax + semantics)
+1 - Very Poor: Broadly invalid UML/PlantUML.
+2 - Poor: Likely won't compile or meaning is distorted.
+3 - Fair: Probably compiles; multiple style/semantic issues (missing types/visibilities, messy relations).
+4 - Good: Compiles; only minor style nits.
+5 - Excellent: Clean, compilable; correct packages/classes/enums/interfaces, visibilities, types, labeled relations, proper inheritance/interfaces.
+
+4) Understandability (stakeholder clarity)
+1 - Very Poor: diagram cluttered, confusing or ambiguous (names/relations/responsibilities); hard to follow/understand/interpret
+2 - Poor: Some diagram's elements are understandable, but overall clarity is low due to poor organisations or missing elements
+3 - Fair: Mixed clarity; readable with effort.
+4 - Good: Mostly clear and readable (naming, structure, and labels) with logical layout and minimal ambiguity. 
+5 - Excellent: Very clear, well-organised packages (e.g., UserManagement, DataPackageManagement, Registry), helpful labels, minimal clutter.
+
+5) Terminology Alignment (matches requirement wording)
+1 - Very Poor: <25% alignment; frequent misleading renames.
+2 - Poor: ~25-49% alignment; hard to map terms.
+3 - Fair: ~50-74% alignment; several renames/synonyms.
+4 - Good: ~75-89% alignment; minor, traceable renames.
+5 - Excellent: >=90% key terms preserved or transparently mapped.
