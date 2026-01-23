@@ -25,7 +25,7 @@
 
 - Experiment procedure diagram illustrasting the flow of the experiment
 
-### Experiment Flow
+### Research Flow
 The figure below illustrates the overall flow of the research and the experiments conducted.
 
 <p style="position: center">
