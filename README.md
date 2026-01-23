@@ -16,7 +16,7 @@
 
   - Folders containing the raw five-criteria (RQ2) score CSV files and graphs.
 
-- `five_criteria_assessment` folder where containing: 
+- `llm_model_generation_evaluation` folder where containing: 
   - Script to generate pairwise evaluation prompts for UML class diagrams (`generate_combinations_pairwise.py`).
 
   - Prompt template used to generate PlantText diagrams (`prompt_texts/`).
