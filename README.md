@@ -9,7 +9,7 @@
   - Prompt template used to generate PlantText diagrams (`prompt_texts/`).
 
   - Statistical Analysis Approach Script (`human_evaluators_script/`) & (`llm_as_a_judge_script/`).
-    - `cohenkappa_1.py` (Grok vs Mistral),
+    - `cohenkappa_1.py` (Grok vs Mistral)
     - `cohenkappa_2.py` (Human A1 vs A2)
     - `cohend_1.py` (Grok vs Mistral)
     - `cohend_2.py` (Human A1 vs A2) 
@@ -23,7 +23,7 @@
 
   - Folders containing the spearman correlation results, the generated UML model diagrams, pairwise comparision raw and justifications.
 
-- Experiment procedure diagram illustrasting the flow of the experiment
+- Experiment procedure diagram illustrasting the flow of the experiment.
 
 ### Research Flow
 The figure below illustrates the overall flow of the research and the experiments conducted.
@@ -81,6 +81,6 @@ python wilcoxon_2.py  # Human A1 vs A2
 
 ### Notes
 - Binary agreement uses a simple thresholding (scores ≥4 considered acceptable).
-- Criteria measured: completeness, correctness, standards, understandability, terminology.
+- 5 Criteria measured: completeness, correctness, standards, understandability, terminology.
 
 
